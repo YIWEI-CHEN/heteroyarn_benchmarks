@@ -135,7 +135,8 @@ public class GaussianBlur extends Configured implements Tool {
 
   public static void executeGaussianBlur(Configuration conf
       ) throws IOException, ClassNotFoundException, InterruptedException {
-    Job job = new Job(conf);
+    // Job job = new Job(conf) is deprecated
+    Job job = Job.getInstance(conf);
     //setup job conf
     job.setJobName(GaussianBlur.class.getSimpleName());
     job.setJarByClass(GaussianBlur.class);
@@ -155,7 +156,7 @@ public class GaussianBlur extends Configured implements Tool {
     job.setSpeculativeExecution(false);
 
     //setup input/output directories
-    final Path inDir = new Path("/images");
+    final Path inDir = new Path("/user/yiwei/gaussian_blur/images");
     FileInputFormat.setInputPaths(job, inDir);
 
     final FileSystem fs = FileSystem.get(conf);

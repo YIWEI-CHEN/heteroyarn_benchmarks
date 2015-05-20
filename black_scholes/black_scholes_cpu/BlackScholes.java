@@ -23,8 +23,8 @@ import org.apache.hadoop.util.ToolRunner;
 
 public class BlackScholes extends Configured implements Tool {
 
-  public static String INPUT_DIR = "/black_scholes/input";
-  public static String OUTPUT_DIR = "/black_scholes/output";
+  public static String INPUT_DIR =  "/user/yiwei/black_scholes/input";
+  public static String OUTPUT_DIR = "/user/yiwei/black_scholes/output";
   
   public static class BSMapper extends 
       Mapper<LongWritable, Text, FloatWritable, FloatWritable> {
@@ -141,7 +141,8 @@ public class BlackScholes extends Configured implements Tool {
 
   public static void blackScholes(Configuration conf
       ) throws IOException, ClassNotFoundException, InterruptedException {
-    Job job = new Job(conf);
+    // Job job = new Job(conf) is deprecated
+    Job job = Job.getInstance(conf);
     job.setJobName(BlackScholes.class.getSimpleName());
     job.setJarByClass(BlackScholes.class);
 

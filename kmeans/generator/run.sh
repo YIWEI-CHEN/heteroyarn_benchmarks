@@ -1,4 +1,4 @@
 #!/bin/sh
 
 CURRENT_DIR=`pwd`
-java -cp ./classes PointGenerator
+java -agentlib:hprof=cpu=times,depth=6 -cp ./classes PointGenerator

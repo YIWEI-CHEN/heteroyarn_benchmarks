@@ -25,8 +25,8 @@ import com.amd.aparapi.Kernel;
 
 public class BlackScholes extends Configured implements Tool {
 
-  public static String INPUT_DIR = "/black_scholes/input";
-  public static String OUTPUT_DIR = "/black_scholes/output";
+  public static String INPUT_DIR =  "/user/yiwei/black_scholes/input";
+  public static String OUTPUT_DIR = "/user/yiwei/black_scholes/output";
   
   public static class BSMapper extends 
       Mapper<LongWritable, Text, FloatWritable, FloatWritable> {
@@ -64,7 +64,7 @@ public class BlackScholes extends Configured implements Tool {
         final float SIGMA_LOWER_LIMIT = 0.01f;
         final float SIGMA_UPPER_LIMIT = 0.10f;
 
-        if(isGpuMapper()) {
+//        if(isGpuMapper()) {
           final int splits = 4;
           final int _size = size / splits;
           float[] _values = new float[_size];
@@ -82,46 +82,46 @@ public class BlackScholes extends Configured implements Tool {
               puts[i * _size + index] = _puts[index];
               calls[i * _size + index] = _calls[index];
             }
-            aparapiConversionTime += kernel.getConversionTime();
-            aparapiExecutionTime += kernel.getExecutionTime();
-            aparapiBufferWriteTime += kernel.getBufferHostToDeviceTime();
-            aparapiKernelTime += kernel.getKernelExecutionTime();
-            aparapiBufferReadTime += kernel.getBufferDeviceToHostTime();
-            updateAparapiCounters(context, aparapiConversionTime, aparapiExecutionTime,
-                aparapiBufferWriteTime, aparapiKernelTime, aparapiBufferReadTime);
+//            aparapiConversionTime += kernel.getConversionTime();
+//            aparapiExecutionTime += kernel.getExecutionTime();
+//            aparapiBufferWriteTime += kernel.getBufferHostToDeviceTime();
+//            aparapiKernelTime += kernel.getKernelExecutionTime();
+//            aparapiBufferReadTime += kernel.getBufferDeviceToHostTime();
+//            updateAparapiCounters(context, aparapiConversionTime, aparapiExecutionTime,
+//                aparapiBufferWriteTime, aparapiKernelTime, aparapiBufferReadTime);
           }
           kernel.dispose();
-        } else {
-          for(int index = 0;index < size;index++) {
-            float d1, d2;
-            float phiD1, phiD2;
-            float sigmaSqrtT;
-            float KexpMinusRT;
-
-            float two = 2.0f;
-            float inRand = values[index];
-            float S = S_LOWER_LIMIT * inRand + S_UPPER_LIMIT * (1.0f - inRand);
-            float K = K_LOWER_LIMIT * inRand + K_UPPER_LIMIT * (1.0f - inRand);
-            float T = T_LOWER_LIMIT * inRand + T_UPPER_LIMIT * (1.0f - inRand);
-            float R = R_LOWER_LIMIT * inRand + R_UPPER_LIMIT * (1.0f - inRand);
-            float sigmaVal = SIGMA_LOWER_LIMIT * inRand + 
-                SIGMA_UPPER_LIMIT * (1.0f - inRand);
-
-            sigmaSqrtT = sigmaVal * (float)Math.sqrt(T);
-            d1 = ((float)Math.log(S / K) + (R + sigmaVal * sigmaVal / two) * T)
-                / sigmaSqrtT;
-            d2 = d1 - sigmaSqrtT;
-            KexpMinusRT = K * (float)Math.exp(-R * T);
-
-            phiD1 = phi(d1);
-            phiD2 = phi(d2);
-            calls[index]  = S * phiD1 - KexpMinusRT * phiD2;
-
-            phiD1 = phi(-d1);
-            phiD2 = phi(-d2);
-            puts[index] = KexpMinusRT * phiD2 - S * phiD1;
-          }
-        }
+//        } else {
+//          for(int index = 0;index < size;index++) {
+//            float d1, d2;
+//            float phiD1, phiD2;
+//            float sigmaSqrtT;
+//            float KexpMinusRT;
+//
+//            float two = 2.0f;
+//            float inRand = values[index];
+//            float S = S_LOWER_LIMIT * inRand + S_UPPER_LIMIT * (1.0f - inRand);
+//            float K = K_LOWER_LIMIT * inRand + K_UPPER_LIMIT * (1.0f - inRand);
+//            float T = T_LOWER_LIMIT * inRand + T_UPPER_LIMIT * (1.0f - inRand);
+//            float R = R_LOWER_LIMIT * inRand + R_UPPER_LIMIT * (1.0f - inRand);
+//            float sigmaVal = SIGMA_LOWER_LIMIT * inRand + 
+//                SIGMA_UPPER_LIMIT * (1.0f - inRand);
+//
+//            sigmaSqrtT = sigmaVal * (float)Math.sqrt(T);
+//            d1 = ((float)Math.log(S / K) + (R + sigmaVal * sigmaVal / two) * T)
+//                / sigmaSqrtT;
+//            d2 = d1 - sigmaSqrtT;
+//            KexpMinusRT = K * (float)Math.exp(-R * T);
+//
+//            phiD1 = phi(d1);
+//            phiD2 = phi(d2);
+//            calls[index]  = S * phiD1 - KexpMinusRT * phiD2;
+//
+//            phiD1 = phi(-d1);
+//            phiD2 = phi(-d2);
+//            puts[index] = KexpMinusRT * phiD2 - S * phiD1;
+//          }
+//        }
 
         for(int index = 0;index < size;index++) {
           context.write(new FloatWritable(puts[index]), 
@@ -247,21 +247,21 @@ public class BlackScholes extends Configured implements Tool {
       return taskID;
     }
 
-    public void updateAparapiCounters(Context context,
-      long aparapiConversionTime, long aparapiExecutionTime,
-      long aparapiBufferWriteTime, long aparapiKernelTime, long aparapiBufferReadTime)
-      throws IOException, InterruptedException {
-      context.getCounter(TaskCounter.APARAPI_CONVERSION_MILLIS).
-          setValue(aparapiConversionTime);
-      context.getCounter(TaskCounter.APARAPI_EXECUTION_MILLIS).
-          setValue(aparapiExecutionTime);
-      context.getCounter(TaskCounter.APARAPI_BUFFER_WRITE_MILLIS).
-          setValue(aparapiBufferWriteTime);
-      context.getCounter(TaskCounter.APARAPI_KERNEL_MILLIS).
-          setValue(aparapiKernelTime);
-      context.getCounter(TaskCounter.APARAPI_BUFFER_READ_MILLIS).
-          setValue(aparapiBufferReadTime);
-    }
+//    public void updateAparapiCounters(Context context,
+//      long aparapiConversionTime, long aparapiExecutionTime,
+//      long aparapiBufferWriteTime, long aparapiKernelTime, long aparapiBufferReadTime)
+//      throws IOException, InterruptedException {
+//      context.getCounter(TaskCounter.APARAPI_CONVERSION_MILLIS).
+//          setValue(aparapiConversionTime);
+//      context.getCounter(TaskCounter.APARAPI_EXECUTION_MILLIS).
+//          setValue(aparapiExecutionTime);
+//      context.getCounter(TaskCounter.APARAPI_BUFFER_WRITE_MILLIS).
+//          setValue(aparapiBufferWriteTime);
+//      context.getCounter(TaskCounter.APARAPI_KERNEL_MILLIS).
+//          setValue(aparapiKernelTime);
+//      context.getCounter(TaskCounter.APARAPI_BUFFER_READ_MILLIS).
+//          setValue(aparapiBufferReadTime);
+//    }
   }
 
   public static class BSReducer extends 
@@ -278,7 +278,8 @@ public class BlackScholes extends Configured implements Tool {
 
   public static void blackScholes(Configuration conf
       ) throws IOException, ClassNotFoundException, InterruptedException {
-    Job job = new Job(conf);
+    // Job job = new Job(conf) is deprecated
+    Job job = Job.getInstance(conf);
     job.setJobName(BlackScholes.class.getSimpleName());
     job.setJarByClass(BlackScholes.class);
 

@@ -1,0 +1,823 @@
+JAVA PROFILE 1.0.1, created Tue May 19 14:33:46 2015
+
+Copyright (c) 2003, 2005, Oracle and/or its affiliates. All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions
+are met:
+
+  - Redistributions of source code must retain the above copyright
+    notice, this list of conditions and the following disclaimer.
+
+  - Redistributions in binary form must reproduce the above copyright
+    notice, this list of conditions and the following disclaimer in the
+    documentation and/or other materials provided with the distribution.
+
+  - Neither the name of Oracle nor the names of its
+    contributors may be used to endorse or promote products derived
+    from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
+Header for -agentlib:hprof (or -Xrunhprof) ASCII Output (JDK 5.0 JVMTI based)
+
+WARNING!  This file format is under development, and is subject to
+change without notice.
+
+This file contains the following types of records:
+
+THREAD START
+THREAD END      mark the lifetime of Java threads
+
+TRACE           represents a Java stack trace.  Each trace consists
+                of a series of stack frames.  Other records refer to
+                TRACEs to identify (1) where object allocations have
+                taken place, (2) the frames in which GC roots were
+                found, and (3) frequently executed methods.
+
+HEAP DUMP       is a complete snapshot of all live objects in the Java
+                heap.  Following distinctions are made:
+
+                ROOT    root set as determined by GC
+                CLS     classes 
+                OBJ     instances
+                ARR     arrays
+
+SITES           is a sorted list of allocation sites.  This identifies
+                the most heavily allocated object types, and the TRACE
+                at which those allocations occurred.
+
+CPU SAMPLES     is a statistical profile of program execution.  The VM
+                periodically samples all running threads, and assigns
+                a quantum to active TRACEs in those threads.  Entries
+                in this record are TRACEs ranked by the percentage of
+                total quanta they consumed; top-ranked TRACEs are
+                typically hot spots in the program.
+
+CPU TIME        is a profile of program execution obtained by measuring
+                the time spent in individual methods (excluding the time
+                spent in callees), as well as by counting the number of
+                times each method is called. Entries in this record are
+                TRACEs ranked by the percentage of total CPU time. The
+                "count" field indicates the number of times each TRACE 
+                is invoked.
+
+MONITOR TIME    is a profile of monitor contention obtained by measuring
+                the time spent by a thread waiting to enter a monitor.
+                Entries in this record are TRACEs ranked by the percentage
+                of total monitor contention time and a brief description
+                of the monitor.  The "count" field indicates the number of 
+                times the monitor was contended at that TRACE.
+
+MONITOR DUMP    is a complete snapshot of all the monitors and threads in 
+                the System.
+
+HEAP DUMP, SITES, CPU SAMPLES|TIME and MONITOR DUMP|TIME records are generated 
+at program exit.  They can also be obtained during program execution by typing 
+Ctrl-\ (on Solaris) or by typing Ctrl-Break (on Win32).
+
+--------
+
+THREAD START (obj=5000017c, id = 200002, name="HPROF gc_finish watcher", group="system")
+THREAD START (obj=5000017c, id = 200001, name="main", group="main")
+THREAD END (id = 200001)
+THREAD START (obj=5000017c, id = 200005, name="DestroyJavaVM", group="main")
+THREAD END (id = 200005)
+TRACE 301936:
+	sun.nio.cs.UTF_8$Encoder.encodeArrayLoop(UTF_8.java:Unknown line)
+	sun.nio.cs.UTF_8$Encoder.encodeLoop(UTF_8.java:Unknown line)
+	java.nio.charset.CharsetEncoder.encode(CharsetEncoder.java:Unknown line)
+	sun.nio.cs.StreamEncoder.implWrite(StreamEncoder.java:Unknown line)
+	sun.nio.cs.StreamEncoder.write(StreamEncoder.java:Unknown line)
+	sun.nio.cs.StreamEncoder.write(StreamEncoder.java:Unknown line)
+TRACE 301815:
+	java.util.Random.next(Random.java:Unknown line)
+	java.util.Random.nextDouble(Random.java:Unknown line)
+	PointGenerator.randomDouble(PointGenerator.java:Unknown line)
+	PointGenerator.generate(PointGenerator.java:Unknown line)
+	PointGenerator.main(PointGenerator.java:Unknown line)
+TRACE 301888:
+	sun.misc.FloatingDecimal.getBinaryToASCIIConverter(FloatingDecimal.java:Unknown line)
+	sun.misc.FloatingDecimal.getBinaryToASCIIConverter(FloatingDecimal.java:Unknown line)
+	sun.misc.FloatingDecimal.appendTo(FloatingDecimal.java:Unknown line)
+	java.lang.AbstractStringBuilder.append(AbstractStringBuilder.java:Unknown line)
+	java.lang.StringBuilder.append(StringBuilder.java:Unknown line)
+	PointGenerator.generate(PointGenerator.java:Unknown line)
+TRACE 302063:
+	PointGenerator.generate(PointGenerator.java:Unknown line)
+	PointGenerator.main(PointGenerator.java:Unknown line)
+TRACE 301934:
+	sun.nio.cs.UTF_8.updatePositions(UTF_8.java:Unknown line)
+	sun.nio.cs.UTF_8.access$200(UTF_8.java:Unknown line)
+	sun.nio.cs.UTF_8$Encoder.encodeArrayLoop(UTF_8.java:Unknown line)
+	sun.nio.cs.UTF_8$Encoder.encodeLoop(UTF_8.java:Unknown line)
+	java.nio.charset.CharsetEncoder.encode(CharsetEncoder.java:Unknown line)
+	sun.nio.cs.StreamEncoder.implWrite(StreamEncoder.java:Unknown line)
+TRACE 301865:
+	java.lang.ThreadLocal.get(ThreadLocal.java:Unknown line)
+	sun.misc.FloatingDecimal.getBinaryToASCIIBuffer(FloatingDecimal.java:Unknown line)
+	sun.misc.FloatingDecimal.getBinaryToASCIIConverter(FloatingDecimal.java:Unknown line)
+	sun.misc.FloatingDecimal.getBinaryToASCIIConverter(FloatingDecimal.java:Unknown line)
+	sun.misc.FloatingDecimal.appendTo(FloatingDecimal.java:Unknown line)
+	java.lang.AbstractStringBuilder.append(AbstractStringBuilder.java:Unknown line)
+TRACE 301895:
+	sun.misc.FloatingDecimal$BinaryToASCIIBuffer.appendTo(FloatingDecimal.java:Unknown line)
+	sun.misc.FloatingDecimal.appendTo(FloatingDecimal.java:Unknown line)
+	java.lang.AbstractStringBuilder.append(AbstractStringBuilder.java:Unknown line)
+	java.lang.StringBuilder.append(StringBuilder.java:Unknown line)
+	PointGenerator.generate(PointGenerator.java:Unknown line)
+	PointGenerator.main(PointGenerator.java:Unknown line)
+TRACE 301816:
+	java.util.Random.nextDouble(Random.java:Unknown line)
+	PointGenerator.randomDouble(PointGenerator.java:Unknown line)
+	PointGenerator.generate(PointGenerator.java:Unknown line)
+	PointGenerator.main(PointGenerator.java:Unknown line)
+TRACE 301896:
+	sun.misc.FloatingDecimal.appendTo(FloatingDecimal.java:Unknown line)
+	java.lang.AbstractStringBuilder.append(AbstractStringBuilder.java:Unknown line)
+	java.lang.StringBuilder.append(StringBuilder.java:Unknown line)
+	PointGenerator.generate(PointGenerator.java:Unknown line)
+	PointGenerator.main(PointGenerator.java:Unknown line)
+TRACE 301937:
+	sun.nio.cs.UTF_8$Encoder.encodeLoop(UTF_8.java:Unknown line)
+	java.nio.charset.CharsetEncoder.encode(CharsetEncoder.java:Unknown line)
+	sun.nio.cs.StreamEncoder.implWrite(StreamEncoder.java:Unknown line)
+	sun.nio.cs.StreamEncoder.write(StreamEncoder.java:Unknown line)
+	sun.nio.cs.StreamEncoder.write(StreamEncoder.java:Unknown line)
+	java.io.OutputStreamWriter.write(OutputStreamWriter.java:Unknown line)
+TRACE 301902:
+	java.lang.AbstractStringBuilder.append(AbstractStringBuilder.java:Unknown line)
+	java.lang.StringBuilder.append(StringBuilder.java:Unknown line)
+	PointGenerator.generate(PointGenerator.java:Unknown line)
+	PointGenerator.main(PointGenerator.java:Unknown line)
+TRACE 301886:
+	sun.misc.FloatingDecimal$BinaryToASCIIBuffer.dtoa(FloatingDecimal.java:Unknown line)
+	sun.misc.FloatingDecimal$BinaryToASCIIBuffer.access$100(FloatingDecimal.java:Unknown line)
+	sun.misc.FloatingDecimal.getBinaryToASCIIConverter(FloatingDecimal.java:Unknown line)
+	sun.misc.FloatingDecimal.getBinaryToASCIIConverter(FloatingDecimal.java:Unknown line)
+	sun.misc.FloatingDecimal.appendTo(FloatingDecimal.java:Unknown line)
+	java.lang.AbstractStringBuilder.append(AbstractStringBuilder.java:Unknown line)
+TRACE 301943:
+	sun.nio.cs.StreamEncoder.implWrite(StreamEncoder.java:Unknown line)
+	sun.nio.cs.StreamEncoder.write(StreamEncoder.java:Unknown line)
+	sun.nio.cs.StreamEncoder.write(StreamEncoder.java:Unknown line)
+	java.io.OutputStreamWriter.write(OutputStreamWriter.java:Unknown line)
+	java.io.PrintWriter.write(PrintWriter.java:Unknown line)
+	java.io.PrintWriter.write(PrintWriter.java:Unknown line)
+TRACE 301959:
+	sun.nio.cs.StreamEncoder.implWrite(StreamEncoder.java:Unknown line)
+	sun.nio.cs.StreamEncoder.write(StreamEncoder.java:Unknown line)
+	sun.nio.cs.StreamEncoder.write(StreamEncoder.java:Unknown line)
+	java.io.OutputStreamWriter.write(OutputStreamWriter.java:Unknown line)
+	java.io.Writer.write(Writer.java:Unknown line)
+	java.io.PrintWriter.newLine(PrintWriter.java:Unknown line)
+TRACE 301917:
+	java.nio.Buffer.<init>(Buffer.java:Unknown line)
+	java.nio.CharBuffer.<init>(CharBuffer.java:Unknown line)
+	java.nio.HeapCharBuffer.<init>(HeapCharBuffer.java:Unknown line)
+	java.nio.CharBuffer.wrap(CharBuffer.java:Unknown line)
+	sun.nio.cs.StreamEncoder.implWrite(StreamEncoder.java:Unknown line)
+	sun.nio.cs.StreamEncoder.write(StreamEncoder.java:Unknown line)
+TRACE 301849:
+	java.lang.ThreadLocal$ThreadLocalMap.getEntry(ThreadLocal.java:Unknown line)
+	java.lang.ThreadLocal$ThreadLocalMap.access$000(ThreadLocal.java:Unknown line)
+	java.lang.ThreadLocal.get(ThreadLocal.java:Unknown line)
+	sun.misc.FloatingDecimal.getBinaryToASCIIBuffer(FloatingDecimal.java:Unknown line)
+	sun.misc.FloatingDecimal.getBinaryToASCIIConverter(FloatingDecimal.java:Unknown line)
+	sun.misc.FloatingDecimal.getBinaryToASCIIConverter(FloatingDecimal.java:Unknown line)
+TRACE 301889:
+	sun.misc.FloatingDecimal.getBinaryToASCIIConverter(FloatingDecimal.java:Unknown line)
+	sun.misc.FloatingDecimal.appendTo(FloatingDecimal.java:Unknown line)
+	java.lang.AbstractStringBuilder.append(AbstractStringBuilder.java:Unknown line)
+	java.lang.StringBuilder.append(StringBuilder.java:Unknown line)
+	PointGenerator.generate(PointGenerator.java:Unknown line)
+	PointGenerator.main(PointGenerator.java:Unknown line)
+TRACE 301897:
+	java.lang.AbstractStringBuilder.append(AbstractStringBuilder.java:Unknown line)
+	java.lang.StringBuilder.append(StringBuilder.java:Unknown line)
+	PointGenerator.generate(PointGenerator.java:Unknown line)
+	PointGenerator.main(PointGenerator.java:Unknown line)
+TRACE 301887:
+	sun.misc.FloatingDecimal$BinaryToASCIIBuffer.access$100(FloatingDecimal.java:Unknown line)
+	sun.misc.FloatingDecimal.getBinaryToASCIIConverter(FloatingDecimal.java:Unknown line)
+	sun.misc.FloatingDecimal.getBinaryToASCIIConverter(FloatingDecimal.java:Unknown line)
+	sun.misc.FloatingDecimal.appendTo(FloatingDecimal.java:Unknown line)
+	java.lang.AbstractStringBuilder.append(AbstractStringBuilder.java:Unknown line)
+	java.lang.StringBuilder.append(StringBuilder.java:Unknown line)
+TRACE 301868:
+	sun.misc.FloatingDecimal$BinaryToASCIIBuffer.access$000(FloatingDecimal.java:Unknown line)
+	sun.misc.FloatingDecimal.getBinaryToASCIIConverter(FloatingDecimal.java:Unknown line)
+	sun.misc.FloatingDecimal.getBinaryToASCIIConverter(FloatingDecimal.java:Unknown line)
+	sun.misc.FloatingDecimal.appendTo(FloatingDecimal.java:Unknown line)
+	java.lang.AbstractStringBuilder.append(AbstractStringBuilder.java:Unknown line)
+	java.lang.StringBuilder.append(StringBuilder.java:Unknown line)
+TRACE 301866:
+	sun.misc.FloatingDecimal.getBinaryToASCIIBuffer(FloatingDecimal.java:Unknown line)
+	sun.misc.FloatingDecimal.getBinaryToASCIIConverter(FloatingDecimal.java:Unknown line)
+	sun.misc.FloatingDecimal.getBinaryToASCIIConverter(FloatingDecimal.java:Unknown line)
+	sun.misc.FloatingDecimal.appendTo(FloatingDecimal.java:Unknown line)
+	java.lang.AbstractStringBuilder.append(AbstractStringBuilder.java:Unknown line)
+	java.lang.StringBuilder.append(StringBuilder.java:Unknown line)
+TRACE 301894:
+	java.lang.StringBuilder.append(StringBuilder.java:Unknown line)
+	sun.misc.FloatingDecimal$BinaryToASCIIBuffer.appendTo(FloatingDecimal.java:Unknown line)
+	sun.misc.FloatingDecimal.appendTo(FloatingDecimal.java:Unknown line)
+	java.lang.AbstractStringBuilder.append(AbstractStringBuilder.java:Unknown line)
+	java.lang.StringBuilder.append(StringBuilder.java:Unknown line)
+	PointGenerator.generate(PointGenerator.java:Unknown line)
+TRACE 301817:
+	PointGenerator.randomDouble(PointGenerator.java:Unknown line)
+	PointGenerator.generate(PointGenerator.java:Unknown line)
+	PointGenerator.main(PointGenerator.java:Unknown line)
+TRACE 301850:
+	java.lang.ThreadLocal$ThreadLocalMap.access$000(ThreadLocal.java:Unknown line)
+	java.lang.ThreadLocal.get(ThreadLocal.java:Unknown line)
+	sun.misc.FloatingDecimal.getBinaryToASCIIBuffer(FloatingDecimal.java:Unknown line)
+	sun.misc.FloatingDecimal.getBinaryToASCIIConverter(FloatingDecimal.java:Unknown line)
+	sun.misc.FloatingDecimal.getBinaryToASCIIConverter(FloatingDecimal.java:Unknown line)
+	sun.misc.FloatingDecimal.appendTo(FloatingDecimal.java:Unknown line)
+TRACE 301898:
+	java.lang.StringBuilder.append(StringBuilder.java:Unknown line)
+	PointGenerator.generate(PointGenerator.java:Unknown line)
+	PointGenerator.main(PointGenerator.java:Unknown line)
+TRACE 301893:
+	java.lang.AbstractStringBuilder.append(AbstractStringBuilder.java:Unknown line)
+	java.lang.StringBuilder.append(StringBuilder.java:Unknown line)
+	sun.misc.FloatingDecimal$BinaryToASCIIBuffer.appendTo(FloatingDecimal.java:Unknown line)
+	sun.misc.FloatingDecimal.appendTo(FloatingDecimal.java:Unknown line)
+	java.lang.AbstractStringBuilder.append(AbstractStringBuilder.java:Unknown line)
+	java.lang.StringBuilder.append(StringBuilder.java:Unknown line)
+TRACE 301813:
+	java.util.concurrent.atomic.AtomicLong.get(AtomicLong.java:Unknown line)
+	java.util.Random.next(Random.java:Unknown line)
+	java.util.Random.nextDouble(Random.java:Unknown line)
+	PointGenerator.randomDouble(PointGenerator.java:Unknown line)
+	PointGenerator.generate(PointGenerator.java:Unknown line)
+	PointGenerator.main(PointGenerator.java:Unknown line)
+TRACE 301814:
+	java.util.concurrent.atomic.AtomicLong.compareAndSet(AtomicLong.java:Unknown line)
+	java.util.Random.next(Random.java:Unknown line)
+	java.util.Random.nextDouble(Random.java:Unknown line)
+	PointGenerator.randomDouble(PointGenerator.java:Unknown line)
+	PointGenerator.generate(PointGenerator.java:Unknown line)
+	PointGenerator.main(PointGenerator.java:Unknown line)
+TRACE 301940:
+	java.nio.charset.CharsetEncoder.encode(CharsetEncoder.java:Unknown line)
+	sun.nio.cs.StreamEncoder.implWrite(StreamEncoder.java:Unknown line)
+	sun.nio.cs.StreamEncoder.write(StreamEncoder.java:Unknown line)
+	sun.nio.cs.StreamEncoder.write(StreamEncoder.java:Unknown line)
+	java.io.OutputStreamWriter.write(OutputStreamWriter.java:Unknown line)
+	java.io.PrintWriter.write(PrintWriter.java:Unknown line)
+TRACE 301956:
+	java.nio.charset.CharsetEncoder.encode(CharsetEncoder.java:Unknown line)
+	sun.nio.cs.StreamEncoder.implWrite(StreamEncoder.java:Unknown line)
+	sun.nio.cs.StreamEncoder.write(StreamEncoder.java:Unknown line)
+	sun.nio.cs.StreamEncoder.write(StreamEncoder.java:Unknown line)
+	java.io.OutputStreamWriter.write(OutputStreamWriter.java:Unknown line)
+	java.io.Writer.write(Writer.java:Unknown line)
+TRACE 301919:
+	java.nio.HeapCharBuffer.<init>(HeapCharBuffer.java:Unknown line)
+	java.nio.CharBuffer.wrap(CharBuffer.java:Unknown line)
+	sun.nio.cs.StreamEncoder.implWrite(StreamEncoder.java:Unknown line)
+	sun.nio.cs.StreamEncoder.write(StreamEncoder.java:Unknown line)
+	sun.nio.cs.StreamEncoder.write(StreamEncoder.java:Unknown line)
+	java.io.OutputStreamWriter.write(OutputStreamWriter.java:Unknown line)
+TRACE 301918:
+	java.nio.CharBuffer.<init>(CharBuffer.java:Unknown line)
+	java.nio.HeapCharBuffer.<init>(HeapCharBuffer.java:Unknown line)
+	java.nio.CharBuffer.wrap(CharBuffer.java:Unknown line)
+	sun.nio.cs.StreamEncoder.implWrite(StreamEncoder.java:Unknown line)
+	sun.nio.cs.StreamEncoder.write(StreamEncoder.java:Unknown line)
+	sun.nio.cs.StreamEncoder.write(StreamEncoder.java:Unknown line)
+TRACE 301935:
+	sun.nio.cs.UTF_8.access$200(UTF_8.java:Unknown line)
+	sun.nio.cs.UTF_8$Encoder.encodeArrayLoop(UTF_8.java:Unknown line)
+	sun.nio.cs.UTF_8$Encoder.encodeLoop(UTF_8.java:Unknown line)
+	java.nio.charset.CharsetEncoder.encode(CharsetEncoder.java:Unknown line)
+	sun.nio.cs.StreamEncoder.implWrite(StreamEncoder.java:Unknown line)
+	sun.nio.cs.StreamEncoder.write(StreamEncoder.java:Unknown line)
+TRACE 301903:
+	java.lang.StringBuilder.append(StringBuilder.java:Unknown line)
+	PointGenerator.generate(PointGenerator.java:Unknown line)
+	PointGenerator.main(PointGenerator.java:Unknown line)
+TRACE 301892:
+	java.lang.AbstractStringBuilder.ensureCapacityInternal(AbstractStringBuilder.java:Unknown line)
+	java.lang.AbstractStringBuilder.append(AbstractStringBuilder.java:Unknown line)
+	java.lang.StringBuilder.append(StringBuilder.java:Unknown line)
+	sun.misc.FloatingDecimal$BinaryToASCIIBuffer.appendTo(FloatingDecimal.java:Unknown line)
+	sun.misc.FloatingDecimal.appendTo(FloatingDecimal.java:Unknown line)
+	java.lang.AbstractStringBuilder.append(AbstractStringBuilder.java:Unknown line)
+TRACE 301926:
+	java.nio.Buffer.position(Buffer.java:Unknown line)
+	sun.nio.cs.UTF_8$Encoder.encodeArrayLoop(UTF_8.java:Unknown line)
+	sun.nio.cs.UTF_8$Encoder.encodeLoop(UTF_8.java:Unknown line)
+	java.nio.charset.CharsetEncoder.encode(CharsetEncoder.java:Unknown line)
+	sun.nio.cs.StreamEncoder.implWrite(StreamEncoder.java:Unknown line)
+	sun.nio.cs.StreamEncoder.write(StreamEncoder.java:Unknown line)
+TRACE 301925:
+	java.nio.CharBuffer.arrayOffset(CharBuffer.java:Unknown line)
+	sun.nio.cs.UTF_8$Encoder.encodeArrayLoop(UTF_8.java:Unknown line)
+	sun.nio.cs.UTF_8$Encoder.encodeLoop(UTF_8.java:Unknown line)
+	java.nio.charset.CharsetEncoder.encode(CharsetEncoder.java:Unknown line)
+	sun.nio.cs.StreamEncoder.implWrite(StreamEncoder.java:Unknown line)
+	sun.nio.cs.StreamEncoder.write(StreamEncoder.java:Unknown line)
+TRACE 301929:
+	java.nio.ByteBuffer.arrayOffset(ByteBuffer.java:Unknown line)
+	sun.nio.cs.UTF_8$Encoder.encodeArrayLoop(UTF_8.java:Unknown line)
+	sun.nio.cs.UTF_8$Encoder.encodeLoop(UTF_8.java:Unknown line)
+	java.nio.charset.CharsetEncoder.encode(CharsetEncoder.java:Unknown line)
+	sun.nio.cs.StreamEncoder.implWrite(StreamEncoder.java:Unknown line)
+	sun.nio.cs.StreamEncoder.write(StreamEncoder.java:Unknown line)
+TRACE 301927:
+	java.nio.Buffer.limit(Buffer.java:Unknown line)
+	sun.nio.cs.UTF_8$Encoder.encodeArrayLoop(UTF_8.java:Unknown line)
+	sun.nio.cs.UTF_8$Encoder.encodeLoop(UTF_8.java:Unknown line)
+	java.nio.charset.CharsetEncoder.encode(CharsetEncoder.java:Unknown line)
+	sun.nio.cs.StreamEncoder.implWrite(StreamEncoder.java:Unknown line)
+	sun.nio.cs.StreamEncoder.write(StreamEncoder.java:Unknown line)
+TRACE 301932:
+	java.nio.Buffer.position(Buffer.java:Unknown line)
+	sun.nio.cs.UTF_8.updatePositions(UTF_8.java:Unknown line)
+	sun.nio.cs.UTF_8.access$200(UTF_8.java:Unknown line)
+	sun.nio.cs.UTF_8$Encoder.encodeArrayLoop(UTF_8.java:Unknown line)
+	sun.nio.cs.UTF_8$Encoder.encodeLoop(UTF_8.java:Unknown line)
+	java.nio.charset.CharsetEncoder.encode(CharsetEncoder.java:Unknown line)
+TRACE 301964:
+	java.io.PrintWriter.newLine(PrintWriter.java:Unknown line)
+	java.io.PrintWriter.println(PrintWriter.java:Unknown line)
+	java.io.PrintWriter.println(PrintWriter.java:Unknown line)
+	PointGenerator.generate(PointGenerator.java:Unknown line)
+	PointGenerator.main(PointGenerator.java:Unknown line)
+TRACE 301966:
+	java.io.PrintWriter.println(PrintWriter.java:Unknown line)
+	PointGenerator.generate(PointGenerator.java:Unknown line)
+	PointGenerator.main(PointGenerator.java:Unknown line)
+TRACE 301944:
+	sun.nio.cs.StreamEncoder.write(StreamEncoder.java:Unknown line)
+	sun.nio.cs.StreamEncoder.write(StreamEncoder.java:Unknown line)
+	java.io.OutputStreamWriter.write(OutputStreamWriter.java:Unknown line)
+	java.io.PrintWriter.write(PrintWriter.java:Unknown line)
+	java.io.PrintWriter.write(PrintWriter.java:Unknown line)
+	java.io.PrintWriter.print(PrintWriter.java:Unknown line)
+TRACE 301947:
+	java.io.PrintWriter.write(PrintWriter.java:Unknown line)
+	java.io.PrintWriter.write(PrintWriter.java:Unknown line)
+	java.io.PrintWriter.print(PrintWriter.java:Unknown line)
+	java.io.PrintWriter.println(PrintWriter.java:Unknown line)
+	PointGenerator.generate(PointGenerator.java:Unknown line)
+	PointGenerator.main(PointGenerator.java:Unknown line)
+TRACE 301948:
+	java.io.PrintWriter.write(PrintWriter.java:Unknown line)
+	java.io.PrintWriter.print(PrintWriter.java:Unknown line)
+	java.io.PrintWriter.println(PrintWriter.java:Unknown line)
+	PointGenerator.generate(PointGenerator.java:Unknown line)
+	PointGenerator.main(PointGenerator.java:Unknown line)
+TRACE 301945:
+	sun.nio.cs.StreamEncoder.write(StreamEncoder.java:Unknown line)
+	java.io.OutputStreamWriter.write(OutputStreamWriter.java:Unknown line)
+	java.io.PrintWriter.write(PrintWriter.java:Unknown line)
+	java.io.PrintWriter.write(PrintWriter.java:Unknown line)
+	java.io.PrintWriter.print(PrintWriter.java:Unknown line)
+	java.io.PrintWriter.println(PrintWriter.java:Unknown line)
+TRACE 301963:
+	java.io.Writer.write(Writer.java:Unknown line)
+	java.io.PrintWriter.newLine(PrintWriter.java:Unknown line)
+	java.io.PrintWriter.println(PrintWriter.java:Unknown line)
+	java.io.PrintWriter.println(PrintWriter.java:Unknown line)
+	PointGenerator.generate(PointGenerator.java:Unknown line)
+	PointGenerator.main(PointGenerator.java:Unknown line)
+TRACE 301961:
+	sun.nio.cs.StreamEncoder.write(StreamEncoder.java:Unknown line)
+	java.io.OutputStreamWriter.write(OutputStreamWriter.java:Unknown line)
+	java.io.Writer.write(Writer.java:Unknown line)
+	java.io.PrintWriter.newLine(PrintWriter.java:Unknown line)
+	java.io.PrintWriter.println(PrintWriter.java:Unknown line)
+	java.io.PrintWriter.println(PrintWriter.java:Unknown line)
+TRACE 301960:
+	sun.nio.cs.StreamEncoder.write(StreamEncoder.java:Unknown line)
+	sun.nio.cs.StreamEncoder.write(StreamEncoder.java:Unknown line)
+	java.io.OutputStreamWriter.write(OutputStreamWriter.java:Unknown line)
+	java.io.Writer.write(Writer.java:Unknown line)
+	java.io.PrintWriter.newLine(PrintWriter.java:Unknown line)
+	java.io.PrintWriter.println(PrintWriter.java:Unknown line)
+TRACE 301891:
+	sun.misc.FloatingDecimal$BinaryToASCIIBuffer.getChars(FloatingDecimal.java:Unknown line)
+	sun.misc.FloatingDecimal$BinaryToASCIIBuffer.appendTo(FloatingDecimal.java:Unknown line)
+	sun.misc.FloatingDecimal.appendTo(FloatingDecimal.java:Unknown line)
+	java.lang.AbstractStringBuilder.append(AbstractStringBuilder.java:Unknown line)
+	java.lang.StringBuilder.append(StringBuilder.java:Unknown line)
+	PointGenerator.generate(PointGenerator.java:Unknown line)
+TRACE 301867:
+	sun.misc.FloatingDecimal$BinaryToASCIIBuffer.setSign(FloatingDecimal.java:Unknown line)
+	sun.misc.FloatingDecimal$BinaryToASCIIBuffer.access$000(FloatingDecimal.java:Unknown line)
+	sun.misc.FloatingDecimal.getBinaryToASCIIConverter(FloatingDecimal.java:Unknown line)
+	sun.misc.FloatingDecimal.getBinaryToASCIIConverter(FloatingDecimal.java:Unknown line)
+	sun.misc.FloatingDecimal.appendTo(FloatingDecimal.java:Unknown line)
+	java.lang.AbstractStringBuilder.append(AbstractStringBuilder.java:Unknown line)
+TRACE 301847:
+	java.lang.ThreadLocal.access$400(ThreadLocal.java:Unknown line)
+	java.lang.ThreadLocal$ThreadLocalMap.getEntry(ThreadLocal.java:Unknown line)
+	java.lang.ThreadLocal$ThreadLocalMap.access$000(ThreadLocal.java:Unknown line)
+	java.lang.ThreadLocal.get(ThreadLocal.java:Unknown line)
+	sun.misc.FloatingDecimal.getBinaryToASCIIBuffer(FloatingDecimal.java:Unknown line)
+	sun.misc.FloatingDecimal.getBinaryToASCIIConverter(FloatingDecimal.java:Unknown line)
+TRACE 301883:
+	sun.misc.FloatingDecimal$BinaryToASCIIBuffer.estimateDecExp(FloatingDecimal.java:Unknown line)
+	sun.misc.FloatingDecimal$BinaryToASCIIBuffer.dtoa(FloatingDecimal.java:Unknown line)
+	sun.misc.FloatingDecimal$BinaryToASCIIBuffer.access$100(FloatingDecimal.java:Unknown line)
+	sun.misc.FloatingDecimal.getBinaryToASCIIConverter(FloatingDecimal.java:Unknown line)
+	sun.misc.FloatingDecimal.getBinaryToASCIIConverter(FloatingDecimal.java:Unknown line)
+	sun.misc.FloatingDecimal.appendTo(FloatingDecimal.java:Unknown line)
+TRACE 301846:
+	java.lang.ThreadLocal.getMap(ThreadLocal.java:Unknown line)
+	java.lang.ThreadLocal.get(ThreadLocal.java:Unknown line)
+	sun.misc.FloatingDecimal.getBinaryToASCIIBuffer(FloatingDecimal.java:Unknown line)
+	sun.misc.FloatingDecimal.getBinaryToASCIIConverter(FloatingDecimal.java:Unknown line)
+	sun.misc.FloatingDecimal.getBinaryToASCIIConverter(FloatingDecimal.java:Unknown line)
+	sun.misc.FloatingDecimal.appendTo(FloatingDecimal.java:Unknown line)
+TRACE 301965:
+	java.io.PrintWriter.println(PrintWriter.java:Unknown line)
+	java.io.PrintWriter.println(PrintWriter.java:Unknown line)
+	PointGenerator.generate(PointGenerator.java:Unknown line)
+	PointGenerator.main(PointGenerator.java:Unknown line)
+TRACE 301946:
+	java.io.OutputStreamWriter.write(OutputStreamWriter.java:Unknown line)
+	java.io.PrintWriter.write(PrintWriter.java:Unknown line)
+	java.io.PrintWriter.write(PrintWriter.java:Unknown line)
+	java.io.PrintWriter.print(PrintWriter.java:Unknown line)
+	java.io.PrintWriter.println(PrintWriter.java:Unknown line)
+	PointGenerator.generate(PointGenerator.java:Unknown line)
+TRACE 301909:
+	java.lang.String.<init>(String.java:Unknown line)
+	java.lang.StringBuilder.toString(StringBuilder.java:Unknown line)
+	PointGenerator.generate(PointGenerator.java:Unknown line)
+	PointGenerator.main(PointGenerator.java:Unknown line)
+TRACE 301910:
+	java.lang.StringBuilder.toString(StringBuilder.java:Unknown line)
+	PointGenerator.generate(PointGenerator.java:Unknown line)
+	PointGenerator.main(PointGenerator.java:Unknown line)
+TRACE 301920:
+	java.nio.CharBuffer.wrap(CharBuffer.java:Unknown line)
+	sun.nio.cs.StreamEncoder.implWrite(StreamEncoder.java:Unknown line)
+	sun.nio.cs.StreamEncoder.write(StreamEncoder.java:Unknown line)
+	sun.nio.cs.StreamEncoder.write(StreamEncoder.java:Unknown line)
+	java.io.OutputStreamWriter.write(OutputStreamWriter.java:Unknown line)
+	java.io.PrintWriter.write(PrintWriter.java:Unknown line)
+TRACE 301962:
+	java.io.OutputStreamWriter.write(OutputStreamWriter.java:Unknown line)
+	java.io.Writer.write(Writer.java:Unknown line)
+	java.io.PrintWriter.newLine(PrintWriter.java:Unknown line)
+	java.io.PrintWriter.println(PrintWriter.java:Unknown line)
+	java.io.PrintWriter.println(PrintWriter.java:Unknown line)
+	PointGenerator.generate(PointGenerator.java:Unknown line)
+TRACE 301819:
+	java.lang.StringBuilder.<init>(StringBuilder.java:Unknown line)
+	PointGenerator.generate(PointGenerator.java:Unknown line)
+	PointGenerator.main(PointGenerator.java:Unknown line)
+TRACE 301954:
+	java.nio.CharBuffer.wrap(CharBuffer.java:Unknown line)
+	sun.nio.cs.StreamEncoder.implWrite(StreamEncoder.java:Unknown line)
+	sun.nio.cs.StreamEncoder.write(StreamEncoder.java:Unknown line)
+	sun.nio.cs.StreamEncoder.write(StreamEncoder.java:Unknown line)
+	java.io.OutputStreamWriter.write(OutputStreamWriter.java:Unknown line)
+	java.io.Writer.write(Writer.java:Unknown line)
+TRACE 301949:
+	java.io.PrintWriter.print(PrintWriter.java:Unknown line)
+	java.io.PrintWriter.println(PrintWriter.java:Unknown line)
+	PointGenerator.generate(PointGenerator.java:Unknown line)
+	PointGenerator.main(PointGenerator.java:Unknown line)
+TRACE 301906:
+	java.lang.AbstractStringBuilder.expandCapacity(AbstractStringBuilder.java:Unknown line)
+	java.lang.AbstractStringBuilder.ensureCapacityInternal(AbstractStringBuilder.java:Unknown line)
+	java.lang.AbstractStringBuilder.append(AbstractStringBuilder.java:Unknown line)
+	java.lang.StringBuilder.append(StringBuilder.java:Unknown line)
+	sun.misc.FloatingDecimal$BinaryToASCIIBuffer.appendTo(FloatingDecimal.java:Unknown line)
+	sun.misc.FloatingDecimal.appendTo(FloatingDecimal.java:Unknown line)
+TRACE 301938:
+	java.nio.charset.CoderResult.isOverflow(CoderResult.java:Unknown line)
+	java.nio.charset.CharsetEncoder.encode(CharsetEncoder.java:Unknown line)
+	sun.nio.cs.StreamEncoder.implWrite(StreamEncoder.java:Unknown line)
+	sun.nio.cs.StreamEncoder.write(StreamEncoder.java:Unknown line)
+	sun.nio.cs.StreamEncoder.write(StreamEncoder.java:Unknown line)
+	java.io.OutputStreamWriter.write(OutputStreamWriter.java:Unknown line)
+TRACE 301924:
+	java.nio.CharBuffer.array(CharBuffer.java:Unknown line)
+	sun.nio.cs.UTF_8$Encoder.encodeArrayLoop(UTF_8.java:Unknown line)
+	sun.nio.cs.UTF_8$Encoder.encodeLoop(UTF_8.java:Unknown line)
+	java.nio.charset.CharsetEncoder.encode(CharsetEncoder.java:Unknown line)
+	sun.nio.cs.StreamEncoder.implWrite(StreamEncoder.java:Unknown line)
+	sun.nio.cs.StreamEncoder.write(StreamEncoder.java:Unknown line)
+TRACE 301928:
+	java.nio.ByteBuffer.array(ByteBuffer.java:Unknown line)
+	sun.nio.cs.UTF_8$Encoder.encodeArrayLoop(UTF_8.java:Unknown line)
+	sun.nio.cs.UTF_8$Encoder.encodeLoop(UTF_8.java:Unknown line)
+	java.nio.charset.CharsetEncoder.encode(CharsetEncoder.java:Unknown line)
+	sun.nio.cs.StreamEncoder.implWrite(StreamEncoder.java:Unknown line)
+	sun.nio.cs.StreamEncoder.write(StreamEncoder.java:Unknown line)
+TRACE 301931:
+	java.nio.CharBuffer.arrayOffset(CharBuffer.java:Unknown line)
+	sun.nio.cs.UTF_8.updatePositions(UTF_8.java:Unknown line)
+	sun.nio.cs.UTF_8.access$200(UTF_8.java:Unknown line)
+	sun.nio.cs.UTF_8$Encoder.encodeArrayLoop(UTF_8.java:Unknown line)
+	sun.nio.cs.UTF_8$Encoder.encodeLoop(UTF_8.java:Unknown line)
+	java.nio.charset.CharsetEncoder.encode(CharsetEncoder.java:Unknown line)
+TRACE 301939:
+	java.nio.charset.CoderResult.isUnderflow(CoderResult.java:Unknown line)
+	java.nio.charset.CharsetEncoder.encode(CharsetEncoder.java:Unknown line)
+	sun.nio.cs.StreamEncoder.implWrite(StreamEncoder.java:Unknown line)
+	sun.nio.cs.StreamEncoder.write(StreamEncoder.java:Unknown line)
+	sun.nio.cs.StreamEncoder.write(StreamEncoder.java:Unknown line)
+	java.io.OutputStreamWriter.write(OutputStreamWriter.java:Unknown line)
+TRACE 301922:
+	java.nio.CharBuffer.hasArray(CharBuffer.java:Unknown line)
+	sun.nio.cs.UTF_8$Encoder.encodeLoop(UTF_8.java:Unknown line)
+	java.nio.charset.CharsetEncoder.encode(CharsetEncoder.java:Unknown line)
+	sun.nio.cs.StreamEncoder.implWrite(StreamEncoder.java:Unknown line)
+	sun.nio.cs.StreamEncoder.write(StreamEncoder.java:Unknown line)
+	sun.nio.cs.StreamEncoder.write(StreamEncoder.java:Unknown line)
+TRACE 301900:
+	java.lang.AbstractStringBuilder.ensureCapacityInternal(AbstractStringBuilder.java:Unknown line)
+	java.lang.AbstractStringBuilder.append(AbstractStringBuilder.java:Unknown line)
+	java.lang.StringBuilder.append(StringBuilder.java:Unknown line)
+	PointGenerator.generate(PointGenerator.java:Unknown line)
+	PointGenerator.main(PointGenerator.java:Unknown line)
+TRACE 301923:
+	java.nio.ByteBuffer.hasArray(ByteBuffer.java:Unknown line)
+	sun.nio.cs.UTF_8$Encoder.encodeLoop(UTF_8.java:Unknown line)
+	java.nio.charset.CharsetEncoder.encode(CharsetEncoder.java:Unknown line)
+	sun.nio.cs.StreamEncoder.implWrite(StreamEncoder.java:Unknown line)
+	sun.nio.cs.StreamEncoder.write(StreamEncoder.java:Unknown line)
+	sun.nio.cs.StreamEncoder.write(StreamEncoder.java:Unknown line)
+TRACE 301916:
+	java.nio.Buffer.position(Buffer.java:Unknown line)
+	java.nio.Buffer.<init>(Buffer.java:Unknown line)
+	java.nio.CharBuffer.<init>(CharBuffer.java:Unknown line)
+	java.nio.HeapCharBuffer.<init>(HeapCharBuffer.java:Unknown line)
+	java.nio.CharBuffer.wrap(CharBuffer.java:Unknown line)
+	sun.nio.cs.StreamEncoder.implWrite(StreamEncoder.java:Unknown line)
+TRACE 301901:
+	java.lang.String.getChars(String.java:Unknown line)
+	java.lang.AbstractStringBuilder.append(AbstractStringBuilder.java:Unknown line)
+	java.lang.StringBuilder.append(StringBuilder.java:Unknown line)
+	PointGenerator.generate(PointGenerator.java:Unknown line)
+	PointGenerator.main(PointGenerator.java:Unknown line)
+TRACE 301933:
+	java.nio.ByteBuffer.arrayOffset(ByteBuffer.java:Unknown line)
+	sun.nio.cs.UTF_8.updatePositions(UTF_8.java:Unknown line)
+	sun.nio.cs.UTF_8.access$200(UTF_8.java:Unknown line)
+	sun.nio.cs.UTF_8$Encoder.encodeArrayLoop(UTF_8.java:Unknown line)
+	sun.nio.cs.UTF_8$Encoder.encodeLoop(UTF_8.java:Unknown line)
+	java.nio.charset.CharsetEncoder.encode(CharsetEncoder.java:Unknown line)
+TRACE 301915:
+	java.nio.Buffer.limit(Buffer.java:Unknown line)
+	java.nio.Buffer.<init>(Buffer.java:Unknown line)
+	java.nio.CharBuffer.<init>(CharBuffer.java:Unknown line)
+	java.nio.HeapCharBuffer.<init>(HeapCharBuffer.java:Unknown line)
+	java.nio.CharBuffer.wrap(CharBuffer.java:Unknown line)
+	sun.nio.cs.StreamEncoder.implWrite(StreamEncoder.java:Unknown line)
+TRACE 301899:
+	java.lang.String.length(String.java:Unknown line)
+	java.lang.AbstractStringBuilder.append(AbstractStringBuilder.java:Unknown line)
+	java.lang.StringBuilder.append(StringBuilder.java:Unknown line)
+	PointGenerator.generate(PointGenerator.java:Unknown line)
+	PointGenerator.main(PointGenerator.java:Unknown line)
+TRACE 301885:
+	sun.misc.FloatingDecimal$BinaryToASCIIBuffer.roundup(FloatingDecimal.java:Unknown line)
+	sun.misc.FloatingDecimal$BinaryToASCIIBuffer.dtoa(FloatingDecimal.java:Unknown line)
+	sun.misc.FloatingDecimal$BinaryToASCIIBuffer.access$100(FloatingDecimal.java:Unknown line)
+	sun.misc.FloatingDecimal.getBinaryToASCIIConverter(FloatingDecimal.java:Unknown line)
+	sun.misc.FloatingDecimal.getBinaryToASCIIConverter(FloatingDecimal.java:Unknown line)
+	sun.misc.FloatingDecimal.appendTo(FloatingDecimal.java:Unknown line)
+TRACE 301908:
+	java.util.Arrays.copyOfRange(Arrays.java:Unknown line)
+	java.lang.String.<init>(String.java:Unknown line)
+	java.lang.StringBuilder.toString(StringBuilder.java:Unknown line)
+	PointGenerator.generate(PointGenerator.java:Unknown line)
+	PointGenerator.main(PointGenerator.java:Unknown line)
+TRACE 301913:
+	java.lang.String.getChars(String.java:Unknown line)
+	sun.nio.cs.StreamEncoder.write(StreamEncoder.java:Unknown line)
+	java.io.OutputStreamWriter.write(OutputStreamWriter.java:Unknown line)
+	java.io.PrintWriter.write(PrintWriter.java:Unknown line)
+	java.io.PrintWriter.write(PrintWriter.java:Unknown line)
+	java.io.PrintWriter.print(PrintWriter.java:Unknown line)
+TRACE 301958:
+	java.nio.Buffer.remaining(Buffer.java:Unknown line)
+	sun.nio.cs.StreamEncoder.implWrite(StreamEncoder.java:Unknown line)
+	sun.nio.cs.StreamEncoder.write(StreamEncoder.java:Unknown line)
+	sun.nio.cs.StreamEncoder.write(StreamEncoder.java:Unknown line)
+	java.io.OutputStreamWriter.write(OutputStreamWriter.java:Unknown line)
+	java.io.Writer.write(Writer.java:Unknown line)
+TRACE 301942:
+	java.nio.Buffer.remaining(Buffer.java:Unknown line)
+	sun.nio.cs.StreamEncoder.implWrite(StreamEncoder.java:Unknown line)
+	sun.nio.cs.StreamEncoder.write(StreamEncoder.java:Unknown line)
+	sun.nio.cs.StreamEncoder.write(StreamEncoder.java:Unknown line)
+	java.io.OutputStreamWriter.write(OutputStreamWriter.java:Unknown line)
+	java.io.PrintWriter.write(PrintWriter.java:Unknown line)
+TRACE 301818:
+	java.lang.AbstractStringBuilder.<init>(AbstractStringBuilder.java:Unknown line)
+	java.lang.StringBuilder.<init>(StringBuilder.java:Unknown line)
+	PointGenerator.generate(PointGenerator.java:Unknown line)
+	PointGenerator.main(PointGenerator.java:Unknown line)
+TRACE 301952:
+	java.lang.String.getChars(String.java:Unknown line)
+	sun.nio.cs.StreamEncoder.write(StreamEncoder.java:Unknown line)
+	java.io.OutputStreamWriter.write(OutputStreamWriter.java:Unknown line)
+	java.io.Writer.write(Writer.java:Unknown line)
+	java.io.PrintWriter.newLine(PrintWriter.java:Unknown line)
+	java.io.PrintWriter.println(PrintWriter.java:Unknown line)
+TRACE 301914:
+	sun.nio.cs.StreamEncoder.ensureOpen(StreamEncoder.java:Unknown line)
+	sun.nio.cs.StreamEncoder.write(StreamEncoder.java:Unknown line)
+	sun.nio.cs.StreamEncoder.write(StreamEncoder.java:Unknown line)
+	java.io.OutputStreamWriter.write(OutputStreamWriter.java:Unknown line)
+	java.io.PrintWriter.write(PrintWriter.java:Unknown line)
+	java.io.PrintWriter.write(PrintWriter.java:Unknown line)
+TRACE 301951:
+	java.lang.String.length(String.java:Unknown line)
+	java.io.Writer.write(Writer.java:Unknown line)
+	java.io.PrintWriter.newLine(PrintWriter.java:Unknown line)
+	java.io.PrintWriter.println(PrintWriter.java:Unknown line)
+	java.io.PrintWriter.println(PrintWriter.java:Unknown line)
+	PointGenerator.generate(PointGenerator.java:Unknown line)
+TRACE 301957:
+	java.nio.charset.CoderResult.isUnderflow(CoderResult.java:Unknown line)
+	sun.nio.cs.StreamEncoder.implWrite(StreamEncoder.java:Unknown line)
+	sun.nio.cs.StreamEncoder.write(StreamEncoder.java:Unknown line)
+	sun.nio.cs.StreamEncoder.write(StreamEncoder.java:Unknown line)
+	java.io.OutputStreamWriter.write(OutputStreamWriter.java:Unknown line)
+	java.io.Writer.write(Writer.java:Unknown line)
+TRACE 301950:
+	java.io.PrintWriter.ensureOpen(PrintWriter.java:Unknown line)
+	java.io.PrintWriter.newLine(PrintWriter.java:Unknown line)
+	java.io.PrintWriter.println(PrintWriter.java:Unknown line)
+	java.io.PrintWriter.println(PrintWriter.java:Unknown line)
+	PointGenerator.generate(PointGenerator.java:Unknown line)
+	PointGenerator.main(PointGenerator.java:Unknown line)
+TRACE 301941:
+	java.nio.charset.CoderResult.isUnderflow(CoderResult.java:Unknown line)
+	sun.nio.cs.StreamEncoder.implWrite(StreamEncoder.java:Unknown line)
+	sun.nio.cs.StreamEncoder.write(StreamEncoder.java:Unknown line)
+	sun.nio.cs.StreamEncoder.write(StreamEncoder.java:Unknown line)
+	java.io.OutputStreamWriter.write(OutputStreamWriter.java:Unknown line)
+	java.io.PrintWriter.write(PrintWriter.java:Unknown line)
+TRACE 301905:
+	java.util.Arrays.copyOf(Arrays.java:Unknown line)
+	java.lang.AbstractStringBuilder.expandCapacity(AbstractStringBuilder.java:Unknown line)
+	java.lang.AbstractStringBuilder.ensureCapacityInternal(AbstractStringBuilder.java:Unknown line)
+	java.lang.AbstractStringBuilder.append(AbstractStringBuilder.java:Unknown line)
+	java.lang.StringBuilder.append(StringBuilder.java:Unknown line)
+	sun.misc.FloatingDecimal$BinaryToASCIIBuffer.appendTo(FloatingDecimal.java:Unknown line)
+TRACE 301912:
+	java.io.PrintWriter.ensureOpen(PrintWriter.java:Unknown line)
+	java.io.PrintWriter.write(PrintWriter.java:Unknown line)
+	java.io.PrintWriter.write(PrintWriter.java:Unknown line)
+	java.io.PrintWriter.print(PrintWriter.java:Unknown line)
+	java.io.PrintWriter.println(PrintWriter.java:Unknown line)
+	PointGenerator.generate(PointGenerator.java:Unknown line)
+TRACE 301953:
+	sun.nio.cs.StreamEncoder.ensureOpen(StreamEncoder.java:Unknown line)
+	sun.nio.cs.StreamEncoder.write(StreamEncoder.java:Unknown line)
+	sun.nio.cs.StreamEncoder.write(StreamEncoder.java:Unknown line)
+	java.io.OutputStreamWriter.write(OutputStreamWriter.java:Unknown line)
+	java.io.Writer.write(Writer.java:Unknown line)
+	java.io.PrintWriter.newLine(PrintWriter.java:Unknown line)
+TRACE 301921:
+	java.nio.Buffer.hasRemaining(Buffer.java:Unknown line)
+	sun.nio.cs.StreamEncoder.implWrite(StreamEncoder.java:Unknown line)
+	sun.nio.cs.StreamEncoder.write(StreamEncoder.java:Unknown line)
+	sun.nio.cs.StreamEncoder.write(StreamEncoder.java:Unknown line)
+	java.io.OutputStreamWriter.write(OutputStreamWriter.java:Unknown line)
+	java.io.PrintWriter.write(PrintWriter.java:Unknown line)
+TRACE 301955:
+	java.nio.Buffer.hasRemaining(Buffer.java:Unknown line)
+	sun.nio.cs.StreamEncoder.implWrite(StreamEncoder.java:Unknown line)
+	sun.nio.cs.StreamEncoder.write(StreamEncoder.java:Unknown line)
+	sun.nio.cs.StreamEncoder.write(StreamEncoder.java:Unknown line)
+	java.io.OutputStreamWriter.write(OutputStreamWriter.java:Unknown line)
+	java.io.Writer.write(Writer.java:Unknown line)
+TRACE 301911:
+	java.lang.String.length(String.java:Unknown line)
+	java.io.PrintWriter.write(PrintWriter.java:Unknown line)
+	java.io.PrintWriter.print(PrintWriter.java:Unknown line)
+	java.io.PrintWriter.println(PrintWriter.java:Unknown line)
+	PointGenerator.generate(PointGenerator.java:Unknown line)
+	PointGenerator.main(PointGenerator.java:Unknown line)
+TRACE 301982:
+	java.io.FileOutputStream.write(FileOutputStream.java:Unknown line)
+	sun.nio.cs.StreamEncoder.writeBytes(StreamEncoder.java:Unknown line)
+	sun.nio.cs.StreamEncoder.implWrite(StreamEncoder.java:Unknown line)
+	sun.nio.cs.StreamEncoder.write(StreamEncoder.java:Unknown line)
+	sun.nio.cs.StreamEncoder.write(StreamEncoder.java:Unknown line)
+	java.io.OutputStreamWriter.write(OutputStreamWriter.java:Unknown line)
+CPU TIME (ms) BEGIN (total = 5527510) Tue May 19 16:05:53 2015
+rank   self  accum   count trace method
+   1  7.06%  7.06% 21001430 301936 sun.nio.cs.UTF_8$Encoder.encodeArrayLoop
+   2  4.87% 11.93% 62914560 301815 java.util.Random.next
+   3  3.36% 15.29% 31457280 301888 sun.misc.FloatingDecimal.getBinaryToASCIIConverter
+   4  3.29% 18.58%       1 302063 PointGenerator.generate
+   5  2.84% 21.42% 20971522 301934 sun.nio.cs.UTF_8.updatePositions
+   6  2.48% 23.90% 31457250 301865 java.lang.ThreadLocal.get
+   7  2.47% 26.37% 31457280 301895 sun.misc.FloatingDecimal$BinaryToASCIIBuffer.appendTo
+   8  2.45% 28.82% 31457280 301816 java.util.Random.nextDouble
+   9  2.42% 31.23% 31457280 301896 sun.misc.FloatingDecimal.appendTo
+  10  2.25% 33.49% 21001430 301937 sun.nio.cs.UTF_8$Encoder.encodeLoop
+  11  2.21% 35.70% 20971520 301902 java.lang.AbstractStringBuilder.append
+  12  2.07% 37.77% 31457250 301886 sun.misc.FloatingDecimal$BinaryToASCIIBuffer.dtoa
+  13  1.73% 39.51% 10485760 301943 sun.nio.cs.StreamEncoder.implWrite
+  14  1.72% 41.23% 10485760 301959 sun.nio.cs.StreamEncoder.implWrite
+  15  1.63% 42.86% 20971522 301917 java.nio.Buffer.<init>
+  16  1.56% 44.42% 31457250 301849 java.lang.ThreadLocal$ThreadLocalMap.getEntry
+  17  1.56% 45.98% 31457280 301889 sun.misc.FloatingDecimal.getBinaryToASCIIConverter
+  18  1.55% 47.53% 31457280 301897 java.lang.AbstractStringBuilder.append
+  19  1.55% 49.08% 31457250 301887 sun.misc.FloatingDecimal$BinaryToASCIIBuffer.access$100
+  20  1.55% 50.62% 31457250 301868 sun.misc.FloatingDecimal$BinaryToASCIIBuffer.access$000
+  21  1.55% 52.17% 31457250 301866 sun.misc.FloatingDecimal.getBinaryToASCIIBuffer
+  22  1.54% 53.71% 31457280 301894 java.lang.StringBuilder.append
+  23  1.54% 55.26% 31457280 301817 PointGenerator.randomDouble
+  24  1.54% 56.80% 31457250 301850 java.lang.ThreadLocal$ThreadLocalMap.access$000
+  25  1.54% 58.34% 31457280 301898 java.lang.StringBuilder.append
+  26  1.54% 59.87% 31457280 301893 java.lang.AbstractStringBuilder.append
+  27  1.31% 61.18% 62914560 301813 java.util.concurrent.atomic.AtomicLong.get
+  28  1.29% 62.47% 62914560 301814 java.util.concurrent.atomic.AtomicLong.compareAndSet
+  29  1.14% 63.61% 10514323 301940 java.nio.charset.CharsetEncoder.encode
+  30  1.14% 64.75% 10487107 301956 java.nio.charset.CharsetEncoder.encode
+  31  1.05% 65.79% 20971520 301919 java.nio.HeapCharBuffer.<init>
+  32  1.04% 66.83% 20971520 301918 java.nio.CharBuffer.<init>
+  33  1.04% 67.87% 20971522 301935 sun.nio.cs.UTF_8.access$200
+  34  1.04% 68.91% 20971520 301903 java.lang.StringBuilder.append
+  35  0.95% 69.87% 31457280 301892 java.lang.AbstractStringBuilder.ensureCapacityInternal
+  36  0.89% 70.75% 42002864 301926 java.nio.Buffer.position
+  37  0.88% 71.63% 42002864 301925 java.nio.CharBuffer.arrayOffset
+  38  0.87% 72.50% 42002864 301929 java.nio.ByteBuffer.arrayOffset
+  39  0.87% 73.37% 42002864 301927 java.nio.Buffer.limit
+  40  0.86% 74.23% 41943046 301932 java.nio.Buffer.position
+  41  0.84% 75.07% 10485760 301964 java.io.PrintWriter.newLine
+  42  0.84% 75.91% 10485760 301966 java.io.PrintWriter.println
+  43  0.84% 76.75% 10485760 301944 sun.nio.cs.StreamEncoder.write
+  44  0.83% 77.58% 10485760 301947 java.io.PrintWriter.write
+  45  0.83% 78.41% 10485760 301948 java.io.PrintWriter.write
+  46  0.83% 79.24% 10485760 301945 sun.nio.cs.StreamEncoder.write
+  47  0.83% 80.07% 10485760 301963 java.io.Writer.write
+  48  0.83% 80.90% 10485760 301961 sun.nio.cs.StreamEncoder.write
+  49  0.83% 81.73% 10485760 301960 sun.nio.cs.StreamEncoder.write
+  50  0.67% 82.39% 31457280 301891 sun.misc.FloatingDecimal$BinaryToASCIIBuffer.getChars
+  51  0.65% 83.04% 31457250 301867 sun.misc.FloatingDecimal$BinaryToASCIIBuffer.setSign
+  52  0.65% 83.69% 31457250 301847 java.lang.ThreadLocal.access$400
+  53  0.64% 84.33% 31141962 301883 sun.misc.FloatingDecimal$BinaryToASCIIBuffer.estimateDecExp
+  54  0.64% 84.97% 31457250 301846 java.lang.ThreadLocal.getMap
+  55  0.54% 85.51% 10485760 301965 java.io.PrintWriter.println
+  56  0.53% 86.04% 10485760 301946 java.io.OutputStreamWriter.write
+  57  0.53% 86.57% 10485760 301909 java.lang.String.<init>
+  58  0.52% 87.10% 10485760 301910 java.lang.StringBuilder.toString
+  59  0.52% 87.62% 10485760 301920 java.nio.CharBuffer.wrap
+  60  0.52% 88.14% 10485760 301962 java.io.OutputStreamWriter.write
+  61  0.52% 88.66% 10485760 301819 java.lang.StringBuilder.<init>
+  62  0.52% 89.18% 10485760 301954 java.nio.CharBuffer.wrap
+  63  0.52% 89.70% 10485760 301949 java.io.PrintWriter.print
+  64  0.51% 90.21% 10485682 301906 java.lang.AbstractStringBuilder.expandCapacity
+  65  0.45% 90.66% 21001430 301938 java.nio.charset.CoderResult.isOverflow
+  66  0.45% 91.11% 21001432 301924 java.nio.CharBuffer.array
+  67  0.45% 91.55% 21001432 301928 java.nio.ByteBuffer.array
+  68  0.44% 92.00% 20971523 301931 java.nio.CharBuffer.arrayOffset
+  69  0.44% 92.43% 20971520 301939 java.nio.charset.CoderResult.isUnderflow
+  70  0.44% 92.87% 21001430 301922 java.nio.CharBuffer.hasArray
+  71  0.44% 93.31% 20971520 301900 java.lang.AbstractStringBuilder.ensureCapacityInternal
+  72  0.43% 93.74% 21001430 301923 java.nio.ByteBuffer.hasArray
+  73  0.43% 94.18% 20971522 301916 java.nio.Buffer.position
+  74  0.43% 94.61% 20971520 301901 java.lang.String.getChars
+  75  0.43% 95.04% 20971523 301933 java.nio.ByteBuffer.arrayOffset
+  76  0.43% 95.47% 20971522 301915 java.nio.Buffer.limit
+  77  0.42% 95.89% 20971520 301899 java.lang.String.length
+  78  0.31% 96.20% 15098356 301885 sun.misc.FloatingDecimal$BinaryToASCIIBuffer.roundup
+  79  0.23% 96.43% 10485760 301908 java.util.Arrays.copyOfRange
+  80  0.23% 96.66% 10485760 301913 java.lang.String.getChars
+  81  0.23% 96.88% 10485760 301958 java.nio.Buffer.remaining
+  82  0.22% 97.11% 10485760 301942 java.nio.Buffer.remaining
+  83  0.22% 97.33% 10485760 301818 java.lang.AbstractStringBuilder.<init>
+  84  0.22% 97.55% 10485760 301952 java.lang.String.getChars
+  85  0.22% 97.77% 10485760 301914 sun.nio.cs.StreamEncoder.ensureOpen
+  86  0.22% 97.99% 10485760 301951 java.lang.String.length
+  87  0.22% 98.21% 10487107 301957 java.nio.charset.CoderResult.isUnderflow
+  88  0.22% 98.43% 10485760 301950 java.io.PrintWriter.ensureOpen
+  89  0.22% 98.65% 10514323 301941 java.nio.charset.CoderResult.isUnderflow
+  90  0.22% 98.87% 10485682 301905 java.util.Arrays.copyOf
+  91  0.22% 99.08% 10485760 301912 java.io.PrintWriter.ensureOpen
+  92  0.22% 99.30% 10485760 301953 sun.nio.cs.StreamEncoder.ensureOpen
+  93  0.22% 99.52% 10514323 301921 java.nio.Buffer.hasRemaining
+  94  0.21% 99.73% 10487107 301955 java.nio.Buffer.hasRemaining
+  95  0.21% 99.94% 10485760 301911 java.lang.String.length
+  96  0.02% 99.97%   29910 301982 java.io.FileOutputStream.write
+CPU TIME (ms) END

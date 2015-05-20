@@ -44,7 +44,7 @@ public class QuasiMonteCarlo extends Configured implements Tool {
 	  offset = 0;
 	  size = 1;
 	}
-	final boolean[] isInside = new boolean[(int)size];
+	final boolean[] isInside = new boolean[size];
 
         for(int i = 0;i < size;i++) {
           double x = 0.0, y = 0.0;
@@ -126,9 +126,15 @@ public class QuasiMonteCarlo extends Configured implements Tool {
       Path outDir = new Path(conf.get(FileOutputFormat.OUTDIR));
       Path outFile = new Path(outDir, "reduce-out");
       FileSystem fileSys = FileSystem.get(conf);
-      SequenceFile.Writer writer = SequenceFile.createWriter(fileSys, conf,
-          outFile, LongWritable.class, LongWritable.class, 
-          CompressionType.NONE);
+//      SequenceFile.Writer writer = SequenceFile.createWriter(fileSys, conf,
+//          outFile, LongWritable.class, LongWritable.class, 
+//          CompressionType.NONE);
+      SequenceFile.Writer writer = SequenceFile.createWriter(
+            conf, 
+            SequenceFile.Writer.file(outFile), 
+            SequenceFile.Writer.keyClass(LongWritable.class), 
+            SequenceFile.Writer.valueClass(LongWritable.class), 
+            SequenceFile.Writer.compression(CompressionType.NONE));
       writer.append(new LongWritable(numInside), new LongWritable(numOutside));
       writer.close();
     }
@@ -137,7 +143,8 @@ public class QuasiMonteCarlo extends Configured implements Tool {
   public static BigDecimal estimatePi(int numMaps, long numPoints,
       Path tmpDir, Configuration conf
       ) throws IOException, ClassNotFoundException, InterruptedException {
-    Job job = new Job(conf);
+    // Job job = new Job(conf) is deprecated
+    Job job = Job.getInstance(conf);
     //setup job conf
     job.setJobName(QuasiMonteCarlo.class.getSimpleName());
     job.setJarByClass(QuasiMonteCarlo.class);
@@ -176,9 +183,15 @@ public class QuasiMonteCarlo extends Configured implements Tool {
       //generate an input file for each map task
       for(int i = 0; i < numMaps; ++i) {
         final Path file = new Path(inDir, "part" + i);
+//        final SequenceFile.Writer writer = SequenceFile.createWriter(
+//          fs, conf, file,
+//          LongWritable.class, LongWritable.class, CompressionType.NONE);
         final SequenceFile.Writer writer = SequenceFile.createWriter(
-          fs, conf, file,
-          LongWritable.class, LongWritable.class, CompressionType.NONE);
+                conf, 
+                SequenceFile.Writer.file(file), 
+                SequenceFile.Writer.keyClass(LongWritable.class), 
+                SequenceFile.Writer.valueClass(LongWritable.class), 
+                SequenceFile.Writer.compression(CompressionType.NONE));
 	final LongWritable offset = new LongWritable(i * numPoints);
 	final LongWritable size = new LongWritable(numPoints);
         try {
@@ -200,7 +213,9 @@ public class QuasiMonteCarlo extends Configured implements Tool {
       Path inFile = new Path(outDir, "reduce-out");
       LongWritable numInside = new LongWritable();
       LongWritable numOutside = new LongWritable();
-      SequenceFile.Reader reader = new SequenceFile.Reader(fs, inFile, conf);
+      SequenceFile.Reader reader = new SequenceFile.Reader(
+              conf,
+              SequenceFile.Reader.file(inFile));
       try {
         reader.next(numInside, numOutside);
       } finally {
@@ -229,7 +244,7 @@ public class QuasiMonteCarlo extends Configured implements Tool {
     final long nSamples = Long.parseLong(args[1]);
     long now = System.currentTimeMillis();
     int rand = new Random().nextInt(Integer.MAX_VALUE);
-    final Path tmpDir = new Path(TMP_DIR_PREFIX + "_" + now + "_" + rand);
+    final Path tmpDir = new Path("/user/yiwei/"+TMP_DIR_PREFIX + "_" + now + "_" + rand);
         
     System.out.println("Number of Maps  = " + nMaps);
     System.out.println("Samples per Map = " + nSamples);

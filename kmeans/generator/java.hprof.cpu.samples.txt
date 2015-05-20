@@ -1,0 +1,275 @@
+JAVA PROFILE 1.0.1, created Tue May 19 14:10:34 2015
+
+Copyright (c) 2003, 2005, Oracle and/or its affiliates. All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions
+are met:
+
+  - Redistributions of source code must retain the above copyright
+    notice, this list of conditions and the following disclaimer.
+
+  - Redistributions in binary form must reproduce the above copyright
+    notice, this list of conditions and the following disclaimer in the
+    documentation and/or other materials provided with the distribution.
+
+  - Neither the name of Oracle nor the names of its
+    contributors may be used to endorse or promote products derived
+    from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
+Header for -agentlib:hprof (or -Xrunhprof) ASCII Output (JDK 5.0 JVMTI based)
+
+WARNING!  This file format is under development, and is subject to
+change without notice.
+
+This file contains the following types of records:
+
+THREAD START
+THREAD END      mark the lifetime of Java threads
+
+TRACE           represents a Java stack trace.  Each trace consists
+                of a series of stack frames.  Other records refer to
+                TRACEs to identify (1) where object allocations have
+                taken place, (2) the frames in which GC roots were
+                found, and (3) frequently executed methods.
+
+HEAP DUMP       is a complete snapshot of all live objects in the Java
+                heap.  Following distinctions are made:
+
+                ROOT    root set as determined by GC
+                CLS     classes 
+                OBJ     instances
+                ARR     arrays
+
+SITES           is a sorted list of allocation sites.  This identifies
+                the most heavily allocated object types, and the TRACE
+                at which those allocations occurred.
+
+CPU SAMPLES     is a statistical profile of program execution.  The VM
+                periodically samples all running threads, and assigns
+                a quantum to active TRACEs in those threads.  Entries
+                in this record are TRACEs ranked by the percentage of
+                total quanta they consumed; top-ranked TRACEs are
+                typically hot spots in the program.
+
+CPU TIME        is a profile of program execution obtained by measuring
+                the time spent in individual methods (excluding the time
+                spent in callees), as well as by counting the number of
+                times each method is called. Entries in this record are
+                TRACEs ranked by the percentage of total CPU time. The
+                "count" field indicates the number of times each TRACE 
+                is invoked.
+
+MONITOR TIME    is a profile of monitor contention obtained by measuring
+                the time spent by a thread waiting to enter a monitor.
+                Entries in this record are TRACEs ranked by the percentage
+                of total monitor contention time and a brief description
+                of the monitor.  The "count" field indicates the number of 
+                times the monitor was contended at that TRACE.
+
+MONITOR DUMP    is a complete snapshot of all the monitors and threads in 
+                the System.
+
+HEAP DUMP, SITES, CPU SAMPLES|TIME and MONITOR DUMP|TIME records are generated 
+at program exit.  They can also be obtained during program execution by typing 
+Ctrl-\ (on Solaris) or by typing Ctrl-Break (on Win32).
+
+--------
+
+THREAD START (obj=50000189, id = 200001, name="main", group="main")
+THREAD END (id = 200001)
+THREAD START (obj=50000189, id = 200004, name="DestroyJavaVM", group="main")
+THREAD END (id = 200004)
+TRACE 300055:
+	sun.misc.FloatingDecimal$BinaryToASCIIBuffer.access$100(FloatingDecimal.java:259)
+	sun.misc.FloatingDecimal.getBinaryToASCIIConverter(FloatingDecimal.java:1785)
+	sun.misc.FloatingDecimal.getBinaryToASCIIConverter(FloatingDecimal.java:1738)
+	sun.misc.FloatingDecimal.appendTo(FloatingDecimal.java:89)
+	java.lang.AbstractStringBuilder.append(AbstractStringBuilder.java:709)
+	java.lang.StringBuilder.append(StringBuilder.java:226)
+TRACE 300056:
+	sun.nio.cs.UTF_8$Encoder.encodeLoop(UTF_8.java:691)
+	java.nio.charset.CharsetEncoder.encode(CharsetEncoder.java:579)
+	sun.nio.cs.StreamEncoder.implWrite(StreamEncoder.java:271)
+	sun.nio.cs.StreamEncoder.write(StreamEncoder.java:125)
+	sun.nio.cs.StreamEncoder.write(StreamEncoder.java:135)
+	java.io.OutputStreamWriter.write(OutputStreamWriter.java:220)
+TRACE 300054:
+	java.io.FileOutputStream.writeBytes(FileOutputStream.java:Unknown line)
+	java.io.FileOutputStream.write(FileOutputStream.java:326)
+	sun.nio.cs.StreamEncoder.writeBytes(StreamEncoder.java:221)
+	sun.nio.cs.StreamEncoder.implWrite(StreamEncoder.java:282)
+	sun.nio.cs.StreamEncoder.write(StreamEncoder.java:125)
+	sun.nio.cs.StreamEncoder.write(StreamEncoder.java:135)
+TRACE 300065:
+	sun.misc.FloatingDecimal$BinaryToASCIIBuffer.appendTo(FloatingDecimal.java:307)
+	sun.misc.FloatingDecimal.appendTo(FloatingDecimal.java:89)
+	java.lang.AbstractStringBuilder.append(AbstractStringBuilder.java:709)
+	java.lang.StringBuilder.append(StringBuilder.java:226)
+	PointGenerator.generate(PointGenerator.java:32)
+	PointGenerator.main(PointGenerator.java:20)
+TRACE 300066:
+	sun.misc.FloatingDecimal$BinaryToASCIIBuffer.appendTo(FloatingDecimal.java:307)
+	sun.misc.FloatingDecimal.appendTo(FloatingDecimal.java:89)
+	java.lang.AbstractStringBuilder.append(AbstractStringBuilder.java:709)
+	java.lang.StringBuilder.append(StringBuilder.java:226)
+	PointGenerator.generate(PointGenerator.java:32)
+	PointGenerator.main(PointGenerator.java:20)
+TRACE 300064:
+	sun.misc.FloatingDecimal$BinaryToASCIIBuffer.appendTo(FloatingDecimal.java:307)
+	sun.misc.FloatingDecimal.appendTo(FloatingDecimal.java:89)
+	java.lang.AbstractStringBuilder.append(AbstractStringBuilder.java:709)
+	java.lang.StringBuilder.append(StringBuilder.java:226)
+	PointGenerator.generate(PointGenerator.java:32)
+	PointGenerator.main(PointGenerator.java:20)
+TRACE 300052:
+	PointGenerator.generate(PointGenerator.java:28)
+	PointGenerator.main(PointGenerator.java:20)
+TRACE 300067:
+	PointGenerator.generate(PointGenerator.java:32)
+	PointGenerator.main(PointGenerator.java:20)
+TRACE 300060:
+	java.util.Random.nextDouble(Random.java:532)
+	PointGenerator.randomDouble(PointGenerator.java:41)
+	PointGenerator.generate(PointGenerator.java:31)
+	PointGenerator.main(PointGenerator.java:20)
+TRACE 300068:
+	java.io.PrintWriter.write(PrintWriter.java:456)
+	java.io.PrintWriter.write(PrintWriter.java:473)
+	java.io.PrintWriter.print(PrintWriter.java:603)
+	java.io.PrintWriter.println(PrintWriter.java:739)
+	PointGenerator.generate(PointGenerator.java:32)
+	PointGenerator.main(PointGenerator.java:20)
+TRACE 300033:
+	java.security.Permissions.add(Permissions.java:137)
+	java.net.URLClassLoader.getPermissions(URLClassLoader.java:714)
+	sun.misc.Launcher$AppClassLoader.getPermissions(Launcher.java:339)
+	java.security.SecureClassLoader.getProtectionDomain(SecureClassLoader.java:206)
+	java.security.SecureClassLoader.defineClass(SecureClassLoader.java:142)
+	java.net.URLClassLoader.defineClass(URLClassLoader.java:467)
+TRACE 300048:
+	sun.nio.cs.StreamEncoder.write(StreamEncoder.java:133)
+	java.io.OutputStreamWriter.write(OutputStreamWriter.java:220)
+	java.io.PrintWriter.write(PrintWriter.java:456)
+	java.io.PrintWriter.write(PrintWriter.java:473)
+	java.io.PrintWriter.print(PrintWriter.java:603)
+	java.io.PrintWriter.println(PrintWriter.java:739)
+TRACE 300049:
+	sun.nio.cs.StreamEncoder.write(StreamEncoder.java:133)
+	java.io.OutputStreamWriter.write(OutputStreamWriter.java:220)
+	java.io.Writer.write(Writer.java:157)
+	java.io.PrintWriter.newLine(PrintWriter.java:480)
+	java.io.PrintWriter.println(PrintWriter.java:629)
+	java.io.PrintWriter.println(PrintWriter.java:740)
+TRACE 300050:
+	java.io.Writer.write(Writer.java:157)
+	java.io.PrintWriter.newLine(PrintWriter.java:480)
+	java.io.PrintWriter.println(PrintWriter.java:629)
+	java.io.PrintWriter.println(PrintWriter.java:740)
+	PointGenerator.generate(PointGenerator.java:32)
+	PointGenerator.main(PointGenerator.java:20)
+TRACE 300051:
+	sun.misc.FloatingDecimal$BinaryToASCIIBuffer.roundup(FloatingDecimal.java:789)
+	sun.misc.FloatingDecimal$BinaryToASCIIBuffer.dtoa(FloatingDecimal.java:778)
+	sun.misc.FloatingDecimal$BinaryToASCIIBuffer.access$100(FloatingDecimal.java:259)
+	sun.misc.FloatingDecimal.getBinaryToASCIIConverter(FloatingDecimal.java:1785)
+	sun.misc.FloatingDecimal.getBinaryToASCIIConverter(FloatingDecimal.java:1738)
+	sun.misc.FloatingDecimal.appendTo(FloatingDecimal.java:89)
+TRACE 300053:
+	sun.misc.FloatingDecimal$BinaryToASCIIBuffer.dtoa(FloatingDecimal.java:690)
+	sun.misc.FloatingDecimal$BinaryToASCIIBuffer.access$100(FloatingDecimal.java:259)
+	sun.misc.FloatingDecimal.getBinaryToASCIIConverter(FloatingDecimal.java:1785)
+	sun.misc.FloatingDecimal.getBinaryToASCIIConverter(FloatingDecimal.java:1738)
+	sun.misc.FloatingDecimal.appendTo(FloatingDecimal.java:89)
+	java.lang.AbstractStringBuilder.append(AbstractStringBuilder.java:709)
+TRACE 300057:
+	sun.misc.FloatingDecimal$BinaryToASCIIBuffer.dtoa(FloatingDecimal.java:700)
+	sun.misc.FloatingDecimal$BinaryToASCIIBuffer.access$100(FloatingDecimal.java:259)
+	sun.misc.FloatingDecimal.getBinaryToASCIIConverter(FloatingDecimal.java:1785)
+	sun.misc.FloatingDecimal.getBinaryToASCIIConverter(FloatingDecimal.java:1738)
+	sun.misc.FloatingDecimal.appendTo(FloatingDecimal.java:89)
+	java.lang.AbstractStringBuilder.append(AbstractStringBuilder.java:709)
+TRACE 300058:
+	sun.misc.FloatingDecimal.appendTo(FloatingDecimal.java:89)
+	java.lang.AbstractStringBuilder.append(AbstractStringBuilder.java:709)
+	java.lang.StringBuilder.append(StringBuilder.java:226)
+	PointGenerator.generate(PointGenerator.java:32)
+	PointGenerator.main(PointGenerator.java:20)
+TRACE 300059:
+	java.util.Random.nextDouble(Random.java:532)
+	PointGenerator.randomDouble(PointGenerator.java:41)
+	PointGenerator.generate(PointGenerator.java:29)
+	PointGenerator.main(PointGenerator.java:20)
+TRACE 300061:
+	java.lang.Double.doubleToRawLongBits(Double.java:Unknown line)
+	sun.misc.FloatingDecimal.getBinaryToASCIIConverter(FloatingDecimal.java:1750)
+	sun.misc.FloatingDecimal.getBinaryToASCIIConverter(FloatingDecimal.java:1738)
+	sun.misc.FloatingDecimal.appendTo(FloatingDecimal.java:89)
+	java.lang.AbstractStringBuilder.append(AbstractStringBuilder.java:709)
+	java.lang.StringBuilder.append(StringBuilder.java:226)
+TRACE 300062:
+	java.util.Random.nextDouble(Random.java:532)
+	PointGenerator.randomDouble(PointGenerator.java:41)
+	PointGenerator.generate(PointGenerator.java:30)
+	PointGenerator.main(PointGenerator.java:20)
+TRACE 300063:
+	java.lang.StringBuilder.append(StringBuilder.java:136)
+	PointGenerator.generate(PointGenerator.java:32)
+	PointGenerator.main(PointGenerator.java:20)
+TRACE 300069:
+	java.lang.AbstractStringBuilder.<init>(AbstractStringBuilder.java:68)
+	java.lang.StringBuilder.<init>(StringBuilder.java:89)
+	PointGenerator.generate(PointGenerator.java:32)
+	PointGenerator.main(PointGenerator.java:20)
+TRACE 300070:
+	java.lang.StringBuilder.toString(StringBuilder.java:407)
+	PointGenerator.generate(PointGenerator.java:32)
+	PointGenerator.main(PointGenerator.java:20)
+TRACE 300071:
+	java.nio.CharBuffer.wrap(CharBuffer.java:373)
+	sun.nio.cs.StreamEncoder.implWrite(StreamEncoder.java:265)
+	sun.nio.cs.StreamEncoder.write(StreamEncoder.java:125)
+	sun.nio.cs.StreamEncoder.write(StreamEncoder.java:135)
+	java.io.OutputStreamWriter.write(OutputStreamWriter.java:220)
+	java.io.PrintWriter.write(PrintWriter.java:456)
+CPU SAMPLES BEGIN (total = 824) Tue May 19 14:10:42 2015
+rank   self  accum   count trace method
+   1 59.59% 59.59%     491 300055 sun.misc.FloatingDecimal$BinaryToASCIIBuffer.access$100
+   2 23.06% 82.65%     190 300056 sun.nio.cs.UTF_8$Encoder.encodeLoop
+   3  5.95% 88.59%      49 300054 java.io.FileOutputStream.writeBytes
+   4  2.67% 91.26%      22 300065 sun.misc.FloatingDecimal$BinaryToASCIIBuffer.appendTo
+   5  2.55% 93.81%      21 300066 sun.misc.FloatingDecimal$BinaryToASCIIBuffer.appendTo
+   6  1.94% 95.75%      16 300064 sun.misc.FloatingDecimal$BinaryToASCIIBuffer.appendTo
+   7  0.85% 96.60%       7 300052 PointGenerator.generate
+   8  0.85% 97.45%       7 300067 PointGenerator.generate
+   9  0.36% 97.82%       3 300060 java.util.Random.nextDouble
+  10  0.36% 98.18%       3 300068 java.io.PrintWriter.write
+  11  0.12% 98.30%       1 300033 java.security.Permissions.add
+  12  0.12% 98.42%       1 300048 sun.nio.cs.StreamEncoder.write
+  13  0.12% 98.54%       1 300049 sun.nio.cs.StreamEncoder.write
+  14  0.12% 98.67%       1 300050 java.io.Writer.write
+  15  0.12% 98.79%       1 300051 sun.misc.FloatingDecimal$BinaryToASCIIBuffer.roundup
+  16  0.12% 98.91%       1 300053 sun.misc.FloatingDecimal$BinaryToASCIIBuffer.dtoa
+  17  0.12% 99.03%       1 300057 sun.misc.FloatingDecimal$BinaryToASCIIBuffer.dtoa
+  18  0.12% 99.15%       1 300058 sun.misc.FloatingDecimal.appendTo
+  19  0.12% 99.27%       1 300059 java.util.Random.nextDouble
+  20  0.12% 99.39%       1 300061 java.lang.Double.doubleToRawLongBits
+  21  0.12% 99.51%       1 300062 java.util.Random.nextDouble
+  22  0.12% 99.64%       1 300063 java.lang.StringBuilder.append
+  23  0.12% 99.76%       1 300069 java.lang.AbstractStringBuilder.<init>
+  24  0.12% 99.88%       1 300070 java.lang.StringBuilder.toString
+  25  0.12% 100.00%       1 300071 java.nio.CharBuffer.wrap
+CPU SAMPLES END

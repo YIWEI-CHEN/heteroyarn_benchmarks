@@ -8,15 +8,17 @@ import java.util.Random;
 public class FloatGenerator {
 
   private static final String OUTPUT_PREFIX =
-      "/data/mytmp/black_scholes/input/";
-  private static final int MAX_NUM_PARTS = 4000;
-  private static final int MAX_NUM_FLOATS_PER_PART = (int)(1024 * 1024 * 5);
+      "/mnt/data/project/hadoop-input/black_scholes/";
+  private static final int MAX_NUM_PARTS = 2;
+  private static final int MAX_NUM_FLOATS_PER_PART = (int)(1024 * 1024 * 60);
   private static final Random RANDOM = new Random();
 
   public static void main(String[] args) {
-    for(int part = 100;part < MAX_NUM_PARTS;part++) {
+    long start = System.currentTimeMillis();
+    for(int part = 0;part < MAX_NUM_PARTS;part++) {
       generate(OUTPUT_PREFIX + "part" + part);
     }
+    System.out.println((System.currentTimeMillis()-start)/1000f);
   }
 
   private static void generate(String outputName) {

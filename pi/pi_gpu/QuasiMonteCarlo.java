@@ -52,9 +52,9 @@ public class QuasiMonteCarlo extends Configured implements Tool {
 	  offset = 0;
 	  size = 1;
 	}
-	final boolean[] isInside = new boolean[(int)size];
+	final boolean[] isInside = new boolean[size];
 
-        if(isGpuMapper()) {
+//        if(isGpuMapper()) {
 	  Kernel kernel = new Kernel() {
 	    @Override public void run() {
 	      int gid = getGlobalId();
@@ -92,39 +92,39 @@ public class QuasiMonteCarlo extends Configured implements Tool {
 	  } else {
 	    System.out.println("THIS IS JPT MODE OF APARAPI");
 	  }
-	  updateAparapiCounters(context, kernel.getConversionTime(), kernel.getExecutionTime(),
-	  kernel.getBufferHostToDeviceTime(), kernel.getKernelExecutionTime(), kernel.getBufferDeviceToHostTime());
+//	  updateAparapiCounters(context, kernel.getConversionTime(), kernel.getExecutionTime(),
+//	  kernel.getBufferHostToDeviceTime(), kernel.getKernelExecutionTime(), kernel.getBufferDeviceToHostTime());
 	  kernel.dispose();
-	} else {
-	  for(int i = 0;i < size;i++) {
-	    double x = 0.0, y = 0.0;
-	    double f =  1.0 / baseX;
-	    int index = offset + i + 1;
-	    int iter = 0;
-	    while(index > 0 || iter < maxIterX) {
-	      x  = x + f * (index % baseX);
-	      index = index / baseX;
-	      f = f / baseX;
-	      iter = iter + 1;
-	    }
-
-	    f = 1.0 / baseY;
-	    index = offset + i + 1;
-	    iter = 0;
-	    while(index > 0 || iter < maxIterY) {
-	      y  = y + f * (index % baseY);
-	      index = index / baseY;
-	      f = f / baseY;
-	      iter = iter + 1;
-	    }
-
-	    double _x = x - 0.5;
-	    double _y = y - 0.5;
-	    isInside[i] = (_x * _x + _y * _y) <= 0.25;
-	  }
-	  System.out.println("THIS IS RUNNING ON CPU");
-          updateAparapiCounters(context, 0, 0, 0, 0, 0);
-	}
+//	} else {
+//	  for(int i = 0;i < size;i++) {
+//	    double x = 0.0, y = 0.0;
+//	    double f =  1.0 / baseX;
+//	    int index = offset + i + 1;
+//	    int iter = 0;
+//	    while(index > 0 || iter < maxIterX) {
+//	      x  = x + f * (index % baseX);
+//	      index = index / baseX;
+//	      f = f / baseX;
+//	      iter = iter + 1;
+//	    }
+//
+//	    f = 1.0 / baseY;
+//	    index = offset + i + 1;
+//	    iter = 0;
+//	    while(index > 0 || iter < maxIterY) {
+//	      y  = y + f * (index % baseY);
+//	      index = index / baseY;
+//	      f = f / baseY;
+//	      iter = iter + 1;
+//	    }
+//
+//	    double _x = x - 0.5;
+//	    double _y = y - 0.5;
+//	    isInside[i] = (_x * _x + _y * _y) <= 0.25;
+//	  }
+//	  System.out.println("THIS IS RUNNING ON CPU");
+//          updateAparapiCounters(context, 0, 0, 0, 0, 0);
+//	}
 
 	int numInside = 0, numOutside = 0;
 	for(int index = 0;index < size;index++) {
@@ -143,16 +143,16 @@ public class QuasiMonteCarlo extends Configured implements Tool {
       }
     }
 
-    public void updateAparapiCounters(Context context,
-				      long aparapiConversionTime, long aparapiExecutionTime,
-				      long aparapiBufferWriteTime, long aparapiKernelTime, long aparapiBufferReadTime)
-				      throws IOException, InterruptedException {
-      context.getCounter(TaskCounter.APARAPI_CONVERSION_MILLIS).setValue(aparapiConversionTime);
-      context.getCounter(TaskCounter.APARAPI_EXECUTION_MILLIS).setValue(aparapiExecutionTime);
-      context.getCounter(TaskCounter.APARAPI_BUFFER_WRITE_MILLIS).setValue(aparapiBufferWriteTime);
-      context.getCounter(TaskCounter.APARAPI_KERNEL_MILLIS).setValue(aparapiKernelTime);
-      context.getCounter(TaskCounter.APARAPI_BUFFER_READ_MILLIS).setValue(aparapiBufferReadTime);
-    }
+//    public void updateAparapiCounters(Context context,
+//				      long aparapiConversionTime, long aparapiExecutionTime,
+//				      long aparapiBufferWriteTime, long aparapiKernelTime, long aparapiBufferReadTime)
+//				      throws IOException, InterruptedException {
+//      context.getCounter(TaskCounter.APARAPI_CONVERSION_MILLIS).setValue(aparapiConversionTime);
+//      context.getCounter(TaskCounter.APARAPI_EXECUTION_MILLIS).setValue(aparapiExecutionTime);
+//      context.getCounter(TaskCounter.APARAPI_BUFFER_WRITE_MILLIS).setValue(aparapiBufferWriteTime);
+//      context.getCounter(TaskCounter.APARAPI_KERNEL_MILLIS).setValue(aparapiKernelTime);
+//      context.getCounter(TaskCounter.APARAPI_BUFFER_READ_MILLIS).setValue(aparapiBufferReadTime);
+//    }
 
     int getTaskID(Context context)
 		throws IOException, InterruptedException {
@@ -191,9 +191,15 @@ public class QuasiMonteCarlo extends Configured implements Tool {
       Path outDir = new Path(conf.get(FileOutputFormat.OUTDIR));
       Path outFile = new Path(outDir, "reduce-out");
       FileSystem fileSys = FileSystem.get(conf);
-      SequenceFile.Writer writer = SequenceFile.createWriter(fileSys, conf,
-          outFile, LongWritable.class, LongWritable.class, 
-          CompressionType.NONE);
+//      SequenceFile.Writer writer = SequenceFile.createWriter(fileSys, conf,
+//          outFile, LongWritable.class, LongWritable.class, 
+//          CompressionType.NONE);
+      SequenceFile.Writer writer = SequenceFile.createWriter(
+            conf, 
+            SequenceFile.Writer.file(outFile), 
+            SequenceFile.Writer.keyClass(LongWritable.class), 
+            SequenceFile.Writer.valueClass(LongWritable.class), 
+            SequenceFile.Writer.compression(CompressionType.NONE));
       writer.append(new LongWritable(numInside), new LongWritable(numOutside));
       writer.close();
     }
@@ -202,7 +208,8 @@ public class QuasiMonteCarlo extends Configured implements Tool {
   public static BigDecimal estimatePi(int numMaps, long numPoints,
       Path tmpDir, Configuration conf
       ) throws IOException, ClassNotFoundException, InterruptedException {
-    Job job = new Job(conf);
+    // Job job = new Job(conf) is deprecated
+    Job job = Job.getInstance(conf);
     //setup job conf
     job.setJobName(QuasiMonteCarlo.class.getSimpleName());
     job.setJarByClass(QuasiMonteCarlo.class);
@@ -242,9 +249,15 @@ public class QuasiMonteCarlo extends Configured implements Tool {
       for(int i = 0; i < numMaps; ++i) {
         final Path file = new Path(inDir, "part" + i);
         System.out.println("file input = " + file);
+//        final SequenceFile.Writer writer = SequenceFile.createWriter(
+//          fs, conf, file,
+//          LongWritable.class, LongWritable.class, CompressionType.NONE);
         final SequenceFile.Writer writer = SequenceFile.createWriter(
-          fs, conf, file,
-          LongWritable.class, LongWritable.class, CompressionType.NONE);
+                conf, 
+                SequenceFile.Writer.file(file), 
+                SequenceFile.Writer.keyClass(LongWritable.class), 
+                SequenceFile.Writer.valueClass(LongWritable.class), 
+                SequenceFile.Writer.compression(CompressionType.NONE));
 	final LongWritable offset = new LongWritable(i * numPoints);
 	final LongWritable size = new LongWritable(numPoints);
         try {
@@ -266,7 +279,10 @@ public class QuasiMonteCarlo extends Configured implements Tool {
       Path inFile = new Path(outDir, "reduce-out");
       LongWritable numInside = new LongWritable();
       LongWritable numOutside = new LongWritable();
-      SequenceFile.Reader reader = new SequenceFile.Reader(fs, inFile, conf);
+//      SequenceFile.Reader reader = new SequenceFile.Reader(fs, inFile, conf);
+      SequenceFile.Reader reader = new SequenceFile.Reader(
+              conf,
+              SequenceFile.Reader.file(inFile));
       try {
         reader.next(numInside, numOutside);
       } finally {

@@ -24,14 +24,15 @@ import org.apache.hadoop.util.ToolRunner;
 
 public class KMeans extends Configured implements Tool {
 
-  public static String INPUT_DIR = "/kmeans/input";
-  public static String OUTPUT_DIR = "/kmeans/output";
-  public static String CENTROIDS_DIR = "/kmeans/centroids";
+  public static String INPUT_DIR     = "/user/yiwei/kmeans/input";
+  public static String OUTPUT_DIR    = "/user/yiwei/kmeans/output";
+  public static String CENTROIDS_DIR = "/user/yiwei/kmeans/centroids";
   
   public static class KmMapper extends 
       Mapper<LongWritable, Text, LongWritable, Text> {
 
     private int K;
+    private final double maxDistance = Double.MAX_VALUE;
     private double[] centroidsX;
     private double[] centroidsY;
     private double[] centroidsZ;
@@ -41,7 +42,7 @@ public class KMeans extends Configured implements Tool {
         ) throws IOException, InterruptedException {
       K = Integer.valueOf(context.getConfiguration().get("kmeans.k"));
       try {
-        Path centroidsFilePath = new Path(CENTROIDS_DIR);
+        Path centroidsFilePath = new Path(CENTROIDS_DIR, "part0");
         FileSystem fs = FileSystem.get(context.getConfiguration());
         BufferedReader cacheReader = new BufferedReader(
             new InputStreamReader(fs.open(centroidsFilePath)));
@@ -69,15 +70,15 @@ public class KMeans extends Configured implements Tool {
       setup(context);
       try {
         final int _K = K;
-        final double maxDistance = Double.MAX_VALUE;
-        final double[] pointsX;
-        final double[] pointsY;
-        final double[] pointsZ;
+//        final double[] pointsX;
+//        final double[] pointsY;
+//        final double[] pointsZ;
         List<Double> pointsListX = new ArrayList<Double>();
         List<Double> pointsListY = new ArrayList<Double>();
         List<Double> pointsListZ = new ArrayList<Double>();
         final int[] nearestCentroids;
-
+        // can we when getting a key-value, invoke a thread in map to run the computation?
+        // rather than gathering all key-values, and proceed to the computing phase
 	while(context.nextKeyValue()) {
 	  String[] xyz = context.getCurrentValue().toString().split(" ");
           pointsListX.add(Double.valueOf(xyz[0]));
@@ -86,23 +87,28 @@ public class KMeans extends Configured implements Tool {
 	}
 
         final int size = pointsListX.size();
-        pointsX = new double[size];
-        pointsY = new double[size];
-        pointsZ = new double[size];
+//        pointsX = new double[size];
+//        pointsY = new double[size];
+//        pointsZ = new double[size];
         nearestCentroids = new int[size];
-        for(int index = 0;index < size;index++) {
-          pointsX[index] = pointsListX.get(index);
-          pointsY[index] = pointsListY.get(index);
-          pointsZ[index] = pointsListZ.get(index);
-        }
-
+        // is the transformation from arraylist to array necessary?
+        // or just make the computation as fair as running in gpu?
+//        for(int index = 0;index < size;index++) {
+//          pointsX[index] = pointsListX.get(index);
+//          pointsY[index] = pointsListY.get(index);
+//          pointsZ[index] = pointsListZ.get(index);
+//        }
+        // ideally, i have 'size' threads, and _K gpu work-items
+        // _K work-items help a thread obtain distance arrary
+        // the thread decide the nearest centroid by using distance arrary in share memory
         for(int index = 0;index < size;index++) {
           double minDistance = maxDistance;
           int nearestCentroid = -1;
           for(int i = 0;i < _K;i++) {
-            double diffX = pointsX[i] - centroidsX[i];
-            double diffY = pointsY[i] - centroidsY[i];
-            double diffZ = pointsZ[i] - centroidsZ[i];
+            //yiwei replaceed pointsX with pointsListX
+            double diffX = pointsListX.get(i) - centroidsX[i];
+            double diffY = pointsListY.get(i) - centroidsY[i];
+            double diffZ = pointsListZ.get(i) - centroidsZ[i];
             double distance = diffX * diffX + diffY * diffY + diffZ * diffZ;
             if(distance < minDistance) {
               minDistance = distance;
@@ -113,8 +119,8 @@ public class KMeans extends Configured implements Tool {
         }
 
         for(int index = 0;index < size;index++) {
-          String point = pointsX[index] + " "
-              + pointsY[index] + " " + pointsZ[index];
+          String point = pointsListX.get(index) + " "
+              + pointsListY.get(index) + " " + pointsListZ.get(index);
           context.write(new LongWritable(nearestCentroids[index]), 
               new Text(point));
         }
@@ -167,7 +173,8 @@ public class KMeans extends Configured implements Tool {
 
   public static void kmeans(int K, Configuration conf
       ) throws IOException, ClassNotFoundException, InterruptedException {
-    Job job = new Job(conf);
+    // Job job = new Job(conf) is deprecated
+    Job job = Job.getInstance(conf);
     //setup job conf
     job.setJobName(KMeans.class.getSimpleName());
     job.setJarByClass(KMeans.class);
@@ -183,12 +190,13 @@ public class KMeans extends Configured implements Tool {
     job.setMapperClass(KmMapper.class);
 
     job.setReducerClass(KmReducer.class);
-    job.setNumReduceTasks(K);
+    job.setNumReduceTasks(4);
 
     job.setSpeculativeExecution(false);
 
+    long timestamp = System.currentTimeMillis();
     final Path inDir = new Path(INPUT_DIR);
-    final Path outDir = new Path(OUTPUT_DIR);
+    final Path outDir = new Path(OUTPUT_DIR+timestamp);
     FileInputFormat.setInputPaths(job, inDir);
     FileOutputFormat.setOutputPath(job, outDir);
 
@@ -215,6 +223,17 @@ public class KMeans extends Configured implements Tool {
     final int K = Integer.parseInt(args[0]);
     Configuration conf = getConf();
     conf.setInt("kmeans.k", K);
+    // for profiling using HPROF
+//    conf.setBoolean("mapreduce.task.profile", true);
+//    conf.set("mapreduce.task.profile.params","-agentlib:hprof=cpu=samples,depth=6,force=n,thread=y,verbose=n,file=%s");
+//    conf.set("mapreduce.task.profile.maps","0");
+//    conf.set("mapreduce.task.profile.reduces","0");
+//    conf.setInt("mapreduce.job.jvm.numtasks", 1);
+//    conf.setInt("mapreduce.map.combine.minspills", 9999);
+//    conf.setInt("mapreduce.reduce.shuffle.parallelcopies", 1);
+//    conf.setFloat("mapreduce.reduce.input.buffer.percent", 0f);
+//    conf.setBoolean("mapreduce.map.speculative", false);
+//    conf.setBoolean("mapreduce.reduce.speculative", false);
 
     System.out.println("Value of K = " + K);
         
