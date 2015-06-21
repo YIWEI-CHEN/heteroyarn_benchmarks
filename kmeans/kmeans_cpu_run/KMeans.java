@@ -22,18 +22,7 @@ import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
-import com.amd.aparapi.Kernel;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 public class KMeans extends Configured implements Tool {
-    enum AparapiCounters{
-        APARAPI_CONVERSION_MILLIS,
-        APARAPI_EXECUTION_MILLIS,
-        APARAPI_BUFFER_WRITE_MILLIS,
-        APARAPI_KERNEL_MILLIS,
-        APARAPI_BUFFER_READ_MILLIS
-    }
 
   public static String INPUT_DIR     = "/user/yiwei/kmeans/input";
   public static String OUTPUT_DIR    = "/user/yiwei/kmeans/output";
@@ -42,20 +31,16 @@ public class KMeans extends Configured implements Tool {
   public static class KmMapper extends 
       Mapper<LongWritable, Text, LongWritable, Text> {
 
-    //static final Log LOG = LogFactory.getLog(KmMapper.class);
-
     private int K;
+    private final double maxDistance = Double.MAX_VALUE;
     private double[] centroidsX;
     private double[] centroidsY;
     private double[] centroidsZ;
-    private long copyDuration = 0l;
     private long prepareDuration  = 0l;
     private long addDuration = 0l;
     private long convertDuration = 0l;
     private long mapForDuration  = 0l;
     private long makeStringDuration    = 0l;
-    private long aparapiConversionTime = 0L, aparapiExecutionTime = 0L,
-          aparapiBufferWriteTime = 0L, aparapiKernelTime = 0L, aparapiBufferReadTime = 0L;
 
     @Override
     protected void setup(Context context
@@ -86,30 +71,18 @@ public class KMeans extends Configured implements Tool {
     @Override
     protected void cleanup(Context context
             ) throws IOException, InterruptedException {
-        System.out.println("copy array\t"+copyDuration);
         System.out.println("prepare duration\t"+prepareDuration);
         System.out.println("list add duration\t"+addDuration);
         System.out.println("convert to array duration\t"+convertDuration);
         System.out.println("for duration\t"+mapForDuration);
         System.out.println("makeString duration\t"+makeStringDuration);
-        System.out.println("aparapiConversionTime \t"+aparapiConversionTime +"ms"); 
-        System.out.println("aparapiExecutionTime  \t"+aparapiExecutionTime  +"ms"); 
-        System.out.println("aparapiBufferWriteTime\t"+aparapiBufferWriteTime+"ms"); 
-        System.out.println("aparapiKernelTime     \t"+aparapiKernelTime     +"ms"); 
-        System.out.println("aparapiBufferReadTime \t"+aparapiBufferReadTime +"ms"); 
     }
 
     @Override
     public void run(Context context
 	) throws IOException, InterruptedException {
       setup(context);
-
       try {
-        final int _K = K;
-        final double maxDistance = Double.MAX_VALUE;
-        final double[] _centroidsX = new double[_K];
-        final double[] _centroidsY = new double[_K];
-        final double[] _centroidsZ = new double[_K];
         final double[] pointsX;
         final double[] pointsY;
         final double[] pointsZ;
@@ -118,22 +91,17 @@ public class KMeans extends Configured implements Tool {
         List<Double> pointsListZ = new ArrayList<Double>();
         final int[] nearestCentroids;
         // declaration for profiling
-        long copyStartTime = 0l;
         long prepareStartTime = 0l;
         long addStartTime = 0l;
         long convertStartTime = 0l;
         long mapForStartTime = 0l;
         long makeStringStartTime = 0l;
-
-        copyStartTime = System.currentTimeMillis();
-        System.arraycopy(centroidsX, 0, _centroidsX, 0, _K);
-        System.arraycopy(centroidsY, 0, _centroidsY, 0, _K);
-        System.arraycopy(centroidsZ, 0, _centroidsZ, 0, _K);
-        copyDuration = System.currentTimeMillis() - copyStartTime;
+        // can we when getting a key-value, invoke a thread in map to run the computation?
+        // rather than gathering all key-values, and proceed to the computing phase
 	while(context.nextKeyValue()) {
           Text value = context.getCurrentValue();
           prepareStartTime = System.currentTimeMillis();
-          String[] xyz = value.toString().split(" ");
+	  String[] xyz = value.toString().split(" ");
           Double x = Double.valueOf(xyz[0]);
           Double y = Double.valueOf(xyz[1]);
           Double z = Double.valueOf(xyz[2]);
@@ -157,69 +125,34 @@ public class KMeans extends Configured implements Tool {
           pointsZ[index] = pointsListZ.get(index);
         }
         convertDuration = System.currentTimeMillis()-convertStartTime;
-
-//        if(isGpuMapper()) {
-        Kernel kernel = new Kernel() {
-          @Override public void run() {
-            int gid = getGlobalId();
-            double minDistance = maxDistance;
-            int nearestCentroid = -1;
-            for(int i = 0;i < _K;i++) {
-              double diffX = pointsX[gid] - _centroidsX[i];
-              double diffY = pointsY[gid] - _centroidsY[i];
-              double diffZ = pointsZ[gid] - _centroidsZ[i];
-              double distance = diffX * diffX + diffY * diffY + diffZ * diffZ;
-              if(distance < minDistance) {
-                minDistance = distance;
-                nearestCentroid = i;
-              }
-            }
-            nearestCentroids[gid] = nearestCentroid;
+        // ideally, i have 'size' threads, and K gpu work-items
+        // K work-items help a thread obtain distance arrary
+        // the thread decide the nearest centroid by using distance array in share memory
+        for(int index = 0;index < size;index++) {
+          mapForStartTime = System.currentTimeMillis();
+          double minDistance = maxDistance;
+          int nearestCentroid = -1;
+          for(int i = 0;i < K;i++) {
+            double diffX = pointsX[index] - centroidsX[i];
+            double diffY = pointsY[index] - centroidsY[i];
+            double diffZ = pointsZ[index] - centroidsZ[i];
+            double distance = diffX * diffX + diffY * diffY + diffZ * diffZ;
+            if(distance < minDistance) {
+              minDistance = distance; nearestCentroid = i; }
           }
-        };
-        mapForStartTime = System.currentTimeMillis();
-        kernel.execute(size);
-        mapForDuration += System.currentTimeMillis() - mapForStartTime;
-        System.out.println(kernel.getExecutionMode());
-        aparapiConversionTime  += kernel.getConversionTime();
-        aparapiExecutionTime   += kernel.getExecutionTime();
-//        aparapiBufferWriteTime += kernel.getBufferHostToDeviceTime();
-//        aparapiKernelTime      += kernel.getKernelExecutionTime();
-//        aparapiBufferReadTime  += kernel.getBufferDeviceToHostTime();
-        kernel.dispose();
-        updateAparapiCounters(context, aparapiConversionTime, aparapiExecutionTime,
-            aparapiBufferWriteTime, aparapiKernelTime, aparapiBufferReadTime);
-//          System.out.println("taskID:"+getTaskID(context)+"execution time:"+aparapiExecutionTime);
-//        } else {
-//          for(int index = 0;index < size;index++) {
-//            double minDistance = maxDistance;
-//            int nearestCentroid = -1;
-//            for(int i = 0;i < _K;i++) {
-//              double diffX = pointsX[i] - centroidsX[i];
-//              double diffY = pointsY[i] - centroidsY[i];
-//              double diffZ = pointsZ[i] - centroidsZ[i];
-//              double distance = diffX * diffX + diffY * diffY + diffZ * diffZ;
-//              if(distance < minDistance) {
-//                minDistance = distance;
-//                nearestCentroid = i;
-//              }
-//            }
-//            nearestCentroids[index] = nearestCentroid;
-//          }
-//        }
-
+          nearestCentroids[index] = nearestCentroid;
+          mapForDuration += System.currentTimeMillis() - mapForStartTime;
+        }
         for(int index = 0;index < size;index++) {
           makeStringStartTime = System.currentTimeMillis();
-          String point = pointsX[index] + " "
-              + pointsY[index] + " " + pointsZ[index];
+          String point = pointsListX.get(index) + " "
+              + pointsListY.get(index) + " " + pointsListZ.get(index);
           makeStringDuration += System.currentTimeMillis() - makeStringStartTime;
           System.out.println(index+"\t"+nearestCentroids[index]);
           context.write(new LongWritable(nearestCentroids[index]), 
               new Text(point));
         }
-        
       } finally {
-          //LOG.info("taskID: "+getTaskID(context)+" cpu time: "+context.getCounter(TaskCounter.CPU_MILLISECONDS).getValue());
 	cleanup(context);
       }
     }
@@ -231,18 +164,6 @@ public class KMeans extends Configured implements Tool {
       int taskID = Integer.valueOf(parts[4]);
 
       return taskID;
-    }
-
-    public void updateAparapiCounters(Context context,
-				      long aparapiConversionTime, long aparapiExecutionTime,
-				      long aparapiBufferWriteTime, long aparapiKernelTime, long aparapiBufferReadTime)
-				      throws IOException, InterruptedException {
-      context.getCounter(AparapiCounters.APARAPI_EXECUTION_MILLIS).increment(aparapiExecutionTime);
-      context.getCounter(AparapiCounters.APARAPI_CONVERSION_MILLIS).increment(aparapiConversionTime);
-      context.getCounter(AparapiCounters.APARAPI_EXECUTION_MILLIS).increment(aparapiExecutionTime);
-      context.getCounter(AparapiCounters.APARAPI_BUFFER_WRITE_MILLIS).increment(aparapiBufferWriteTime);
-      context.getCounter(AparapiCounters.APARAPI_KERNEL_MILLIS).increment(aparapiKernelTime);
-      context.getCounter(AparapiCounters.APARAPI_BUFFER_READ_MILLIS).increment(aparapiBufferReadTime);
     }
   }
 
@@ -297,14 +218,13 @@ public class KMeans extends Configured implements Tool {
     job.setMapperClass(KmMapper.class);
 
     job.setReducerClass(KmReducer.class);
-    // yiwei
-  //  job.setNumMapTasks(8);
     job.setNumReduceTasks(1);
 
     job.setSpeculativeExecution(false);
 
+    long timestamp = System.currentTimeMillis();
     final Path inDir = new Path(INPUT_DIR);
-    final Path outDir = new Path(OUTPUT_DIR);
+    final Path outDir = new Path(OUTPUT_DIR+timestamp);
     FileInputFormat.setInputPaths(job, inDir);
     FileOutputFormat.setOutputPath(job, outDir);
 
@@ -333,13 +253,13 @@ public class KMeans extends Configured implements Tool {
     conf.setInt("kmeans.k", K);
     // for profiling using HPROF
     conf.setBoolean("mapreduce.task.profile", true);
-////    conf.set("mapreduce.task.profile.params","-agentlib:hprof=cpu=samples,depth=6,force=n,thread=y,verbose=n,file=%s");
-//    // using BTrace
+//    conf.set("mapreduce.task.profile.params","-agentlib:hprof=cpu=samples,depth=6,force=n,thread=y,verbose=n,file=%s");
+    // using BTrace
     conf.set("mapreduce.task.profile.params", "-javaagent:"
-            + "/home/yiwei/btrace/gpu/btrace-agent.jar="
+            + "/home/yiwei/btrace/run/btrace-agent.jar="
             + "dumpClasses=false,debug=false,"
             + "unsafe=true,probeDescPath=.,noServer=true,"
-            + "script=/home/yiwei/btrace/gpu/KMeansGPU.class,"
+            + "script=/home/yiwei/btrace/run/KMeansRun.class,"
             + "scriptOutputFile=%s");
     conf.set("mapreduce.task.profile.maps","0");
     conf.set("mapreduce.task.profile.reduces","0");
@@ -352,7 +272,6 @@ public class KMeans extends Configured implements Tool {
     conf.setFloat("mapreduce.reduce.input.buffer.percent", 1.0f);
     conf.setFloat("mapreduce.reduce.merge.inmem.threshold ", 0f);
     conf.setInt("mapreduce.task.io.sort.mb", 300);
-
 
     System.out.println("Value of K = " + K);
         

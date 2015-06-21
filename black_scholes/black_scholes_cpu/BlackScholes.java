@@ -28,72 +28,48 @@ public class BlackScholes extends Configured implements Tool {
   
   public static class BSMapper extends 
       Mapper<LongWritable, Text, FloatWritable, FloatWritable> {
-
     @Override
-    public void run(Context context) 
-        throws IOException, InterruptedException {
-      setup(context);
-      try {
-        List<Float> valuesList = new ArrayList<Float>();
-	while(context.nextKeyValue()) {
-	  float value = Float.valueOf(context.getCurrentValue().toString());
-          valuesList.add(value);
-	}
+    protected void map(LongWritable key, Text value, Context context
+            ) throws IOException, InterruptedException {
+      final float S_LOWER_LIMIT = 10.0f;
+      final float S_UPPER_LIMIT = 100.0f;
+      final float K_LOWER_LIMIT = 10.0f;
+      final float K_UPPER_LIMIT = 100.0f;
+      final float T_LOWER_LIMIT = 1.0f;
+      final float T_UPPER_LIMIT = 10.0f;
+      final float R_LOWER_LIMIT = 0.01f;
+      final float R_UPPER_LIMIT = 0.05f;
+      final float SIGMA_LOWER_LIMIT = 0.01f;
+      final float SIGMA_UPPER_LIMIT = 0.10f; 
 
-        final int size = valuesList.size();
-        final float[] values = new float[size];
-        final float[] puts = new float[size];
-        final float[] calls = new float[size];
-        for(int index = 0;index < size;index++) {
-          values[index] = valuesList.get(index);
-        }
+      float _value = Float.valueOf(value.toString());
+      float call, put;
+      float d1, d2;
+      float phiD1, phiD2;
+      float sigmaSqrtT;
+      float KexpMinusRT;
 
-        final float S_LOWER_LIMIT = 10.0f;
-        final float S_UPPER_LIMIT = 100.0f;
-        final float K_LOWER_LIMIT = 10.0f;
-        final float K_UPPER_LIMIT = 100.0f;
-        final float T_LOWER_LIMIT = 1.0f;
-        final float T_UPPER_LIMIT = 10.0f;
-        final float R_LOWER_LIMIT = 0.01f;
-        final float R_UPPER_LIMIT = 0.05f;
-        final float SIGMA_LOWER_LIMIT = 0.01f;
-        final float SIGMA_UPPER_LIMIT = 0.10f;
-        for(int index = 0;index < size;index++) {
-          float d1, d2;
-          float phiD1, phiD2;
-          float sigmaSqrtT;
-          float KexpMinusRT;
+      float two = 2.0f;
+      float inRand = _value;
+      float S = S_LOWER_LIMIT * inRand + S_UPPER_LIMIT * (1.0f - inRand);
+      float K = K_LOWER_LIMIT * inRand + K_UPPER_LIMIT * (1.0f - inRand);
+      float T = T_LOWER_LIMIT * inRand + T_UPPER_LIMIT * (1.0f - inRand);
+      float R = R_LOWER_LIMIT * inRand + R_UPPER_LIMIT * (1.0f - inRand);
+      float sigmaVal = SIGMA_LOWER_LIMIT * inRand + SIGMA_UPPER_LIMIT * (1.0f - inRand);
 
-          float two = 2.0f;
-          float inRand = values[index];
-          float S = S_LOWER_LIMIT * inRand + S_UPPER_LIMIT * (1.0f - inRand);
-          float K = K_LOWER_LIMIT * inRand + K_UPPER_LIMIT * (1.0f - inRand);
-          float T = T_LOWER_LIMIT * inRand + T_UPPER_LIMIT * (1.0f - inRand);
-          float R = R_LOWER_LIMIT * inRand + R_UPPER_LIMIT * (1.0f - inRand);
-          float sigmaVal = SIGMA_LOWER_LIMIT * inRand + 
-              SIGMA_UPPER_LIMIT * (1.0f - inRand);
+      sigmaSqrtT = sigmaVal * (float)Math.sqrt(T);
+      d1 = ((float)Math.log(S / K) + (R + sigmaVal * sigmaVal / two) * T) / sigmaSqrtT;
+      d2 = d1 - sigmaSqrtT;
+      KexpMinusRT = K * (float)Math.exp(-R * T);
 
-          sigmaSqrtT = sigmaVal * (float)Math.sqrt(T);
-          d1 = ((float)Math.log(S / K) + (R + sigmaVal * sigmaVal / two) * T) / sigmaSqrtT;
-          d2 = d1 - sigmaSqrtT;
-          KexpMinusRT = K * (float)Math.exp(-R * T);
+      phiD1 = phi(d1);
+      phiD2 = phi(d2);
+      call  = S * phiD1 - KexpMinusRT * phiD2;
 
-          phiD1 = phi(d1);
-          phiD2 = phi(d2);
-          calls[index]  = S * phiD1 - KexpMinusRT * phiD2;
-
-          phiD1 = phi(-d1);
-          phiD2 = phi(-d2);
-          puts[index] = KexpMinusRT * phiD2 - S * phiD1;
-        }
-
-        for(int index = 0;index < size;index++) {
-          context.write(new FloatWritable(puts[index]), 
-              new FloatWritable(calls[index]));
-        }
-      } finally {
-	cleanup(context);
-      }
+      phiD1 = phi(-d1);
+      phiD2 = phi(-d2);
+      put = KexpMinusRT * phiD2 - S * phiD1;
+      context.write(new FloatWritable(put), new FloatWritable(call));
     }
 
     public float phi(float X) {
@@ -155,7 +131,7 @@ public class BlackScholes extends Configured implements Tool {
     job.setMapperClass(BSMapper.class);
 
     job.setReducerClass(BSReducer.class);
-    job.setNumReduceTasks(50);
+    job.setNumReduceTasks(1);
 
     job.setSpeculativeExecution(false);
 
@@ -167,18 +143,34 @@ public class BlackScholes extends Configured implements Tool {
     final FileSystem fs = FileSystem.get(conf);
 
     try {
-      System.out.println("Starting Job");
-      final long startTime = System.currentTimeMillis();
+//      System.out.println("Starting Job");
+//      final long startTime = System.currentTimeMillis();
       job.waitForCompletion(true);
-      final double duration = (System.currentTimeMillis() - startTime)/1000.0;
-      System.out.println("Job Finished in " + duration + " seconds");
+//      final double duration = (System.currentTimeMillis() - startTime)/1000.0;
+//      System.out.println("Job Finished in " + duration + " seconds");
     } finally {
       fs.delete(outDir, true);
     }
   }
 
   public int run(String[] args) throws Exception {
-    blackScholes(getConf());
+    Configuration conf = getConf();
+    conf.setBoolean("mapreduce.task.profile", true);
+    conf.set("mapreduce.task.profile.params", "-javaagent:"
+            + "/home/yiwei/btrace/btrace-agent.jar="
+            + "dumpClasses=false,debug=false,"
+            + "unsafe=true,probeDescPath=.,noServer=true,"
+            + "script=/home/yiwei/btrace/HadoopBTrace2.class,"
+            + "scriptOutputFile=%s");
+    conf.set("mapreduce.task.profile.maps","0");
+    conf.set("mapreduce.task.profile.reduces","0");
+    conf.setInt("mapreduce.job.jvm.numtasks", 1);
+    conf.setInt("mapreduce.map.combine.minspills", 9999);
+    conf.setInt("mapreduce.reduce.shuffle.parallelcopies", 1);
+    conf.setFloat("mapreduce.reduce.input.buffer.percent", 0f);
+    conf.setBoolean("mapreduce.map.speculative", false);
+    conf.setBoolean("mapreduce.reduce.speculative", false);
+    blackScholes(conf);
     return 0;
   }
 

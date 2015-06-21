@@ -9,7 +9,7 @@ public class PointGenerator {
 
   private static final String OUTPUT_PREFIX = "/mnt/data/project/hadoop-input/kmeans/";
   private static final int MAX_NUM_PARTS = 1;
-  private static final int MAX_NUM_POINTS_PER_PART = (int)(1024 * 1024 * 10);
+  private static final int MAX_NUM_POINTS_PER_PART = (int)(1024 * 1024 * 2);
   private static final Random RANDOM = new Random();
   private static final double RANGE_MIN = 0.0;
   private static final double RANGE_MAX = 10000;

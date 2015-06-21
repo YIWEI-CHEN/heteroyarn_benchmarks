@@ -36,6 +36,12 @@ public class KMeans extends Configured implements Tool {
     private double[] centroidsX;
     private double[] centroidsY;
     private double[] centroidsZ;
+    private long mapForStartTime = 0l;
+    private long mapForDuration  = 0l;
+    private long prepareStartTime = 0l;
+    private long prepareDuration  = 0l;
+    private long makeStringStartTime   = 0l;
+    private long makeStringDuration    = 0l;
 
     @Override
     protected void setup(Context context
@@ -63,71 +69,46 @@ public class KMeans extends Configured implements Tool {
       } finally {
       }
     }
+    @Override
+    protected void cleanup(Context Context
+            ) throws IOException, InterruptedException{
+        System.out.println("map prepare duration\t"+prepareDuration);
+        System.out.println("map for duration\t"+mapForDuration);
+        System.out.println("map makeString duration\t"+makeStringDuration);
+    }
 
     @Override
-    public void run(Context context
-	) throws IOException, InterruptedException {
-      setup(context);
-      try {
-        final int _K = K;
-//        final double[] pointsX;
-//        final double[] pointsY;
-//        final double[] pointsZ;
-        List<Double> pointsListX = new ArrayList<Double>();
-        List<Double> pointsListY = new ArrayList<Double>();
-        List<Double> pointsListZ = new ArrayList<Double>();
-        final int[] nearestCentroids;
-        // can we when getting a key-value, invoke a thread in map to run the computation?
-        // rather than gathering all key-values, and proceed to the computing phase
-	while(context.nextKeyValue()) {
-	  String[] xyz = context.getCurrentValue().toString().split(" ");
-          pointsListX.add(Double.valueOf(xyz[0]));
-          pointsListY.add(Double.valueOf(xyz[1]));
-          pointsListZ.add(Double.valueOf(xyz[2]));
-	}
+    protected void map(LongWritable key, Text value, Context context
+            ) throws IOException, InterruptedException {
+                prepareStartTime = System.currentTimeMillis();
+                String[] xyz = value.toString().split(" ");
+                Double pointX = Double.valueOf(xyz[0]);
+                Double pointY = Double.valueOf(xyz[1]);
+                Double pointZ = Double.valueOf(xyz[2]);
+                prepareDuration += System.currentTimeMillis() -prepareStartTime;
 
-        final int size = pointsListX.size();
-//        pointsX = new double[size];
-//        pointsY = new double[size];
-//        pointsZ = new double[size];
-        nearestCentroids = new int[size];
-        // is the transformation from arraylist to array necessary?
-        // or just make the computation as fair as running in gpu?
-//        for(int index = 0;index < size;index++) {
-//          pointsX[index] = pointsListX.get(index);
-//          pointsY[index] = pointsListY.get(index);
-//          pointsZ[index] = pointsListZ.get(index);
-//        }
-        // ideally, i have 'size' threads, and _K gpu work-items
-        // _K work-items help a thread obtain distance arrary
-        // the thread decide the nearest centroid by using distance arrary in share memory
-        for(int index = 0;index < size;index++) {
-          double minDistance = maxDistance;
-          int nearestCentroid = -1;
-          for(int i = 0;i < _K;i++) {
-            //yiwei replaceed pointsX with pointsListX
-            double diffX = pointsListX.get(i) - centroidsX[i];
-            double diffY = pointsListY.get(i) - centroidsY[i];
-            double diffZ = pointsListZ.get(i) - centroidsZ[i];
-            double distance = diffX * diffX + diffY * diffY + diffZ * diffZ;
-            if(distance < minDistance) {
-              minDistance = distance;
-              nearestCentroid = i;
+                mapForStartTime = System.currentTimeMillis();
+                double minDistance = maxDistance;
+                int nearestCentroid = -1;
+                for(int i = 0;i < K;i++) {
+                    double diffX = pointX - centroidsX[i];
+                    double diffY = pointY - centroidsY[i];
+                    double diffZ = pointZ - centroidsZ[i];
+                    double distance = diffX * diffX + diffY * diffY + diffZ * diffZ;
+                    if(distance < minDistance) {
+                      minDistance = distance;
+                      nearestCentroid = i;
+                    }
+                }
+                mapForDuration += System.currentTimeMillis() - mapForStartTime;
+
+                makeStringStartTime = System.currentTimeMillis();
+                String point = pointX + " "
+                    + pointY + " " + pointZ;
+                makeStringDuration += System.currentTimeMillis() - makeStringStartTime;
+                context.write(new LongWritable(nearestCentroid), 
+                  new Text(point));
             }
-          }
-          nearestCentroids[index] = nearestCentroid;
-        }
-
-        for(int index = 0;index < size;index++) {
-          String point = pointsListX.get(index) + " "
-              + pointsListY.get(index) + " " + pointsListZ.get(index);
-          context.write(new LongWritable(nearestCentroids[index]), 
-              new Text(point));
-        }
-      } finally {
-	cleanup(context);
-      }
-    }
 
     int getTaskID(Context context)
 		throws IOException, InterruptedException {
@@ -190,7 +171,7 @@ public class KMeans extends Configured implements Tool {
     job.setMapperClass(KmMapper.class);
 
     job.setReducerClass(KmReducer.class);
-    job.setNumReduceTasks(4);
+    job.setNumReduceTasks(1);
 
     job.setSpeculativeExecution(false);
 
@@ -224,16 +205,27 @@ public class KMeans extends Configured implements Tool {
     Configuration conf = getConf();
     conf.setInt("kmeans.k", K);
     // for profiling using HPROF
-//    conf.setBoolean("mapreduce.task.profile", true);
-//    conf.set("mapreduce.task.profile.params","-agentlib:hprof=cpu=samples,depth=6,force=n,thread=y,verbose=n,file=%s");
-//    conf.set("mapreduce.task.profile.maps","0");
-//    conf.set("mapreduce.task.profile.reduces","0");
-//    conf.setInt("mapreduce.job.jvm.numtasks", 1);
-//    conf.setInt("mapreduce.map.combine.minspills", 9999);
-//    conf.setInt("mapreduce.reduce.shuffle.parallelcopies", 1);
-//    conf.setFloat("mapreduce.reduce.input.buffer.percent", 0f);
-//    conf.setBoolean("mapreduce.map.speculative", false);
-//    conf.setBoolean("mapreduce.reduce.speculative", false);
+    conf.setBoolean("mapreduce.task.profile", true);
+//    conf.set("mapreduce.task.profile.params","-agentlib:hprof=cpu=samples,depth=40,force=n,thread=y,verbose=n,file=%s");
+    // using BTrace
+    conf.set("mapreduce.task.profile.params", "-javaagent:"
+            + "/home/yiwei/btrace/map/btrace-agent.jar="
+            + "dumpClasses=false,debug=false,"
+            + "unsafe=true,probeDescPath=.,noServer=true,"
+            + "script=/home/yiwei/btrace/map/KMeansMap.class,"
+            + "scriptOutputFile=%s");
+    conf.set("mapreduce.task.profile.maps","0");
+    conf.set("mapreduce.task.profile.reduces","0");
+    conf.setInt("mapreduce.job.jvm.numtasks", 1);
+    conf.setInt("mapreduce.map.combine.minspills", 9999);
+    conf.setBoolean("mapreduce.map.speculative", false);
+    conf.setBoolean("mapreduce.reduce.speculative", false);
+    conf.setInt("mapreduce.reduce.shuffle.parallelcopies", 1);
+
+    conf.setFloat("mapreduce.reduce.input.buffer.percent", 1.0f);
+    conf.setInt("mapreduce.reduce.merge.inmem.threshold ", 0);
+    conf.setInt("mapreduce.task.io.sort.mb", 300);
+//    conf.setBoolean("mapreduce.map.output.compress", true);
 
     System.out.println("Value of K = " + K);
         

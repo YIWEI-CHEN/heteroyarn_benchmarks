@@ -9,8 +9,8 @@ public class FloatGenerator {
 
   private static final String OUTPUT_PREFIX =
       "/mnt/data/project/hadoop-input/black_scholes/";
-  private static final int MAX_NUM_PARTS = 2;
-  private static final int MAX_NUM_FLOATS_PER_PART = (int)(1024 * 1024 * 60);
+  private static final int MAX_NUM_PARTS = 1;
+  private static final int MAX_NUM_FLOATS_PER_PART = (int)(1024 * 1024 * 3);
   private static final Random RANDOM = new Random();
 
   public static void main(String[] args) {
