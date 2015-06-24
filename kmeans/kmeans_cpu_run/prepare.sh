@@ -1,4 +1,5 @@
-hdfs dfs -mkdir -p /user/yiwei/kmeans/input
-hdfs dfs -mkdir -p /user/yiwei/kmeans/centroids
-hdfs dfs -put /mnt/data/project/hadoop-input/kmeans/part0 /user/yiwei/kmeans/input
-hdfs dfs -cp /user/yiwei/kmeans/input/part0 /user/yiwei/kmeans/centroids
+hdfs dfs -mkdir -p kmeans/input
+hdfs dfs -mkdir -p kmeans/centroids
+hdfs dfs -put /home/`whoami`/hadoop_input/kmeans/part0 kmeans/input
+hdfs dfs -cp kmeans/input/part0 kmeans/centroids
+hdfs dfs -ls kmeans/

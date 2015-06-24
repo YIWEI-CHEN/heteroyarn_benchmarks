@@ -24,9 +24,9 @@ import org.apache.hadoop.util.ToolRunner;
 
 public class KMeans extends Configured implements Tool {
 
-  public static String INPUT_DIR     = "/user/yiwei/kmeans/input";
-  public static String OUTPUT_DIR    = "/user/yiwei/kmeans/output";
-  public static String CENTROIDS_DIR = "/user/yiwei/kmeans/centroids";
+  public static String INPUT_DIR     = "kmeans/input";
+  public static String OUTPUT_DIR    = "kmeans/output";
+  public static String CENTROIDS_DIR = "kmeans/centroids";
   
   public static class KmMapper extends 
       Mapper<LongWritable, Text, LongWritable, Text> {
@@ -252,25 +252,25 @@ public class KMeans extends Configured implements Tool {
     Configuration conf = getConf();
     conf.setInt("kmeans.k", K);
     // for profiling using HPROF
-    conf.setBoolean("mapreduce.task.profile", true);
-//    conf.set("mapreduce.task.profile.params","-agentlib:hprof=cpu=samples,depth=6,force=n,thread=y,verbose=n,file=%s");
-    // using BTrace
-    conf.set("mapreduce.task.profile.params", "-javaagent:"
-            + "/home/yiwei/btrace/run/btrace-agent.jar="
-            + "dumpClasses=false,debug=false,"
-            + "unsafe=true,probeDescPath=.,noServer=true,"
-            + "script=/home/yiwei/btrace/run/KMeansRun.class,"
-            + "scriptOutputFile=%s");
-    conf.set("mapreduce.task.profile.maps","0");
-    conf.set("mapreduce.task.profile.reduces","0");
-    conf.setInt("mapreduce.job.jvm.numtasks", 1);
-    conf.setInt("mapreduce.map.combine.minspills", 9999);
-    conf.setBoolean("mapreduce.map.speculative", false);
-    conf.setBoolean("mapreduce.reduce.speculative", false);
-    conf.setInt("mapreduce.reduce.shuffle.parallelcopies", 1);
+   // conf.setBoolean("mapreduce.task.profile", true);
+// //   conf.set("mapreduce.task.profile.params","-agentlib:hprof=cpu=samples,depth=6,force=n,thread=y,verbose=n,file=%s");
+   // // using BTrace
+   // conf.set("mapreduce.task.profile.params", "-javaagent:"
+   //         + "/home/yiwei/btrace/run/btrace-agent.jar="
+   //         + "dumpClasses=false,debug=false,"
+   //         + "unsafe=true,probeDescPath=.,noServer=true,"
+   //         + "script=/home/yiwei/btrace/run/KMeansRun.class,"
+   //         + "scriptOutputFile=%s");
+   // conf.set("mapreduce.task.profile.maps","0");
+   // conf.set("mapreduce.task.profile.reduces","0");
+   // conf.setInt("mapreduce.job.jvm.numtasks", 1);
+   // conf.setInt("mapreduce.map.combine.minspills", 9999);
+   // conf.setBoolean("mapreduce.map.speculative", false);
+   // conf.setBoolean("mapreduce.reduce.speculative", false);
+   // conf.setInt("mapreduce.reduce.shuffle.parallelcopies", 1);
 
     conf.setFloat("mapreduce.reduce.input.buffer.percent", 1.0f);
-    conf.setFloat("mapreduce.reduce.merge.inmem.threshold ", 0f);
+    conf.setInt("mapreduce.reduce.merge.inmem.threshold ", 0);
     conf.setInt("mapreduce.task.io.sort.mb", 300);
 
     System.out.println("Value of K = " + K);
