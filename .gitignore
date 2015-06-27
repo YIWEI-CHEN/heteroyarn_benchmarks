@@ -1,5 +1,6 @@
-classes
 *.class
 *.jar
-*.log
 gaussian_blur/images/
+*.swp
+*log
+*classes

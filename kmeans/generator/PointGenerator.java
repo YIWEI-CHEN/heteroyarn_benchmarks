@@ -7,24 +7,28 @@ import java.util.Random;
 
 public class PointGenerator {
 
-  private static final String OUTPUT_PREFIX = "/mnt/data/project/hadoop-input/kmeans/";
-  private static final int MAX_NUM_PARTS = 1;
-  private static final int MAX_NUM_POINTS_PER_PART = (int)(1024 * 1024 * 2);
+  private static String OUTPUT_PREFIX;
+  private static int MAX_NUM_PARTS;
+  private static int MAX_NUM_POINTS_PER_PART;
   private static final Random RANDOM = new Random();
   private static final double RANGE_MIN = 0.0;
   private static final double RANGE_MAX = 10000;
 
   public static void main(String[] args) {
+    OUTPUT_PREFIX = args[0];
+    MAX_NUM_POINTS_PER_PART = Integer.valueOf(args[1]);
+    MAX_NUM_PARTS = Integer.valueOf(args[2]);
+
     long start = System.currentTimeMillis();
     for(int part = 0;part < MAX_NUM_PARTS;part++) {
       generate(OUTPUT_PREFIX + "part" + part);
     }
-    System.out.println((System.currentTimeMillis()-start)/1000f);
+    System.out.println(((System.currentTimeMillis()-start)/1000f)+"s");
   }
 
   private static void generate(String outputName) {
     try {
-      PrintWriter writer = new PrintWriter(new FileWriter(outputName, true));
+      PrintWriter writer = new PrintWriter(new FileWriter(outputName));
       for(int i = 0;i < MAX_NUM_POINTS_PER_PART;i++) {
         double x = randomDouble();
         double y = randomDouble();
