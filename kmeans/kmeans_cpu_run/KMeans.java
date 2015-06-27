@@ -269,9 +269,9 @@ public class KMeans extends Configured implements Tool {
    // conf.setBoolean("mapreduce.reduce.speculative", false);
    // conf.setInt("mapreduce.reduce.shuffle.parallelcopies", 1);
 
-    conf.setFloat("mapreduce.reduce.input.buffer.percent", 1.0f);
-    conf.setInt("mapreduce.reduce.merge.inmem.threshold ", 0);
-    conf.setInt("mapreduce.task.io.sort.mb", 300);
+   // conf.setFloat("mapreduce.reduce.input.buffer.percent", 1.0f);
+   // conf.setInt("mapreduce.reduce.merge.inmem.threshold ", 0);
+   // conf.setInt("mapreduce.task.io.sort.mb", 300);
 
     System.out.println("Value of K = " + K);
         
