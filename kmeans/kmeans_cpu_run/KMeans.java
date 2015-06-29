@@ -36,11 +36,11 @@ public class KMeans extends Configured implements Tool {
     private double[] centroidsX;
     private double[] centroidsY;
     private double[] centroidsZ;
-    private long prepareDuration  = 0l;
-    private long addDuration = 0l;
-    private long convertDuration = 0l;
-    private long mapForDuration  = 0l;
-    private long makeStringDuration    = 0l;
+   // private long prepareDuration  = 0l;
+   // private long addDuration = 0l;
+   // private long convertDuration = 0l;
+   // private long mapForDuration  = 0l;
+   // private long makeStringDuration    = 0l;
 
     @Override
     protected void setup(Context context
@@ -71,11 +71,11 @@ public class KMeans extends Configured implements Tool {
     @Override
     protected void cleanup(Context context
             ) throws IOException, InterruptedException {
-        System.out.println("prepare duration\t"+prepareDuration);
-        System.out.println("list add duration\t"+addDuration);
-        System.out.println("convert to array duration\t"+convertDuration);
-        System.out.println("for duration\t"+mapForDuration);
-        System.out.println("makeString duration\t"+makeStringDuration);
+        //System.out.println("prepare duration\t"+prepareDuration);
+        //System.out.println("list add duration\t"+addDuration);
+        //System.out.println("convert to array duration\t"+convertDuration);
+        //System.out.println("for duration\t"+mapForDuration);
+        //System.out.println("makeString duration\t"+makeStringDuration);
     }
 
     @Override
@@ -100,17 +100,17 @@ public class KMeans extends Configured implements Tool {
         // rather than gathering all key-values, and proceed to the computing phase
 	while(context.nextKeyValue()) {
           Text value = context.getCurrentValue();
-          prepareStartTime = System.currentTimeMillis();
+          //prepareStartTime = System.currentTimeMillis();
 	  String[] xyz = value.toString().split(" ");
           Double x = Double.valueOf(xyz[0]);
           Double y = Double.valueOf(xyz[1]);
           Double z = Double.valueOf(xyz[2]);
-          prepareDuration += System.currentTimeMillis() -prepareStartTime;
-          addStartTime = System.currentTimeMillis();
+          //prepareDuration += System.currentTimeMillis() -prepareStartTime;
+          //addStartTime = System.currentTimeMillis();
           pointsListX.add(x);
           pointsListY.add(y);
           pointsListZ.add(z);
-          addDuration += System.currentTimeMillis()-addStartTime;
+          //addDuration += System.currentTimeMillis()-addStartTime;
 	}
 
         final int size = pointsListX.size();
@@ -118,18 +118,18 @@ public class KMeans extends Configured implements Tool {
         pointsY = new double[size];
         pointsZ = new double[size];
         nearestCentroids = new int[size];
-        convertStartTime = System.currentTimeMillis();
+        //convertStartTime = System.currentTimeMillis();
         for(int index = 0;index < size;index++) {
           pointsX[index] = pointsListX.get(index);
           pointsY[index] = pointsListY.get(index);
           pointsZ[index] = pointsListZ.get(index);
         }
-        convertDuration = System.currentTimeMillis()-convertStartTime;
+        //convertDuration = System.currentTimeMillis()-convertStartTime;
         // ideally, i have 'size' threads, and K gpu work-items
         // K work-items help a thread obtain distance arrary
         // the thread decide the nearest centroid by using distance array in share memory
         for(int index = 0;index < size;index++) {
-          mapForStartTime = System.currentTimeMillis();
+          //mapForStartTime = System.currentTimeMillis();
           double minDistance = maxDistance;
           int nearestCentroid = -1;
           for(int i = 0;i < K;i++) {
@@ -141,14 +141,14 @@ public class KMeans extends Configured implements Tool {
               minDistance = distance; nearestCentroid = i; }
           }
           nearestCentroids[index] = nearestCentroid;
-          mapForDuration += System.currentTimeMillis() - mapForStartTime;
+          //mapForDuration += System.currentTimeMillis() - mapForStartTime;
         }
         for(int index = 0;index < size;index++) {
-          makeStringStartTime = System.currentTimeMillis();
+          //makeStringStartTime = System.currentTimeMillis();
           String point = pointsListX.get(index) + " "
               + pointsListY.get(index) + " " + pointsListZ.get(index);
-          makeStringDuration += System.currentTimeMillis() - makeStringStartTime;
-          System.out.println(index+"\t"+nearestCentroids[index]);
+          //makeStringDuration += System.currentTimeMillis() - makeStringStartTime;
+          //System.out.println(index+"\t"+nearestCentroids[index]);
           context.write(new LongWritable(nearestCentroids[index]), 
               new Text(point));
         }
