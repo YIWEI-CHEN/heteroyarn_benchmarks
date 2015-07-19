@@ -23,6 +23,7 @@ import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
 import com.amd.aparapi.Kernel;
+import com.amd.aparapi.Aparapi;
 
 public class KMeans extends Configured implements Tool {
 
@@ -107,7 +108,7 @@ public class KMeans extends Configured implements Tool {
           pointsZ[index] = pointsListZ.get(index);
         }
 
-        if(isGpuMapper()) {
+        if(isGPUMapper()) {
           Kernel kernel = new Kernel() {
             @Override public void run() {
               int gid = getGlobalId();
@@ -127,15 +128,32 @@ public class KMeans extends Configured implements Tool {
             }
           };
           kernel.execute(size);
-          aparapiConversionTime += kernel.getConversionTime();
-          aparapiExecutionTime += kernel.getExecutionTime();
-          aparapiBufferWriteTime += kernel.getBufferHostToDeviceTime();
-          aparapiKernelTime += kernel.getKernelExecutionTime();
-          aparapiBufferReadTime += kernel.getBufferDeviceToHostTime();
+         // aparapiConversionTime += kernel.getConversionTime();
+         // aparapiExecutionTime += kernel.getExecutionTime();
+         // aparapiBufferWriteTime += kernel.getBufferHostToDeviceTime();
+         // aparapiKernelTime += kernel.getKernelExecutionTime();
+         // aparapiBufferReadTime += kernel.getBufferDeviceToHostTime();
           kernel.dispose();
-          updateAparapiCounters(context, aparapiConversionTime, aparapiExecutionTime,
-              aparapiBufferWriteTime, aparapiKernelTime, aparapiBufferReadTime);
-        } else {
+         System.out.println("kernel mode\t"+kernel.getExecutionMode());
+         // updateAparapiCounters(context, aparapiConversionTime, aparapiExecutionTime,
+         //     aparapiBufferWriteTime, aparapiKernelTime, aparapiBufferReadTime);
+        } else if(isHSAMapper()){
+            Aparapi.range(size).parallel().forEach(gid ->{
+                double minDistance = maxDistance;
+                int nearestCentroid = -1;
+                for(int i = 0;i < _K;i++) {
+                  double diffX = pointsX[gid] - _centroidsX[i];
+                  double diffY = pointsY[gid] - _centroidsY[i];
+                  double diffZ = pointsZ[gid] - _centroidsZ[i];
+                  double distance = diffX * diffX + diffY * diffY + diffZ * diffZ;
+                  if(distance < minDistance) {
+                    minDistance = distance;
+                    nearestCentroid = i;
+                  }
+                }
+                nearestCentroids[gid] = nearestCentroid;
+            });
+        }else{
           for(int index = 0;index < size;index++) {
             double minDistance = maxDistance;
             int nearestCentroid = -1;
@@ -237,7 +255,7 @@ public class KMeans extends Configured implements Tool {
     job.setMapperClass(KmMapper.class);
 
     job.setReducerClass(KmReducer.class);
-    job.setNumReduceTasks(1);
+    job.setNumReduceTasks(16);
 
     job.setSpeculativeExecution(false);
 

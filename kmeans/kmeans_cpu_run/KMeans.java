@@ -218,7 +218,7 @@ public class KMeans extends Configured implements Tool {
     job.setMapperClass(KmMapper.class);
 
     job.setReducerClass(KmReducer.class);
-    job.setNumReduceTasks(1);
+    job.setNumReduceTasks(16);
 
     job.setSpeculativeExecution(false);
 
