@@ -22,7 +22,7 @@ import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
-import com.amd.aparapi.Kernel;
+import csie.pas.aparapi.Kernel;
 import com.amd.aparapi.Aparapi;
 
 public class KMeans extends Configured implements Tool {
