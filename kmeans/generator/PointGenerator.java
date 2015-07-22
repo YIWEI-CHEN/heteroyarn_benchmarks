@@ -33,7 +33,9 @@ public class PointGenerator {
         double x = randomDouble();
         double y = randomDouble();
         double z = randomDouble();
-        writer.println(x + " " + y + " " + z);
+        double a = randomDouble();
+        double b = randomDouble();
+        writer.println(x + " " + y + " " + z + " " + a + " " + b);
       }
       writer.close();
     } catch(IOException e) {
