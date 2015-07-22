@@ -38,6 +38,8 @@ public class KMeans extends Configured implements Tool {
     private double[] centroidsX;
     private double[] centroidsY;
     private double[] centroidsZ;
+    private double[] centroidsH;
+    private double[] centroidsW;
 
     @Override
     protected void setup(Context context
@@ -51,6 +53,8 @@ public class KMeans extends Configured implements Tool {
         centroidsX = new double[K];
         centroidsY = new double[K];
         centroidsZ = new double[K];
+        centroidsH = new double[K];
+        centroidsW = new double[K];
         int count = 0;
         String line;
 
@@ -59,6 +63,8 @@ public class KMeans extends Configured implements Tool {
           centroidsX[count] = Double.valueOf(xyz[0]);
           centroidsY[count] = Double.valueOf(xyz[1]);
           centroidsZ[count] = Double.valueOf(xyz[2]);
+          centroidsH[count] = Double.valueOf(xyz[3]);
+          centroidsW[count] = Double.valueOf(xyz[4]);
           count++;
         }
         cacheReader.close();
@@ -79,33 +85,47 @@ public class KMeans extends Configured implements Tool {
         final double[] _centroidsX = new double[_K];
         final double[] _centroidsY = new double[_K];
         final double[] _centroidsZ = new double[_K];
+        final double[] _centroidsH = new double[_K];
+        final double[] _centroidsW = new double[_K];
         final double[] pointsX;
         final double[] pointsY;
         final double[] pointsZ;
+        final double[] pointsH;
+        final double[] pointsW;
         List<Double> pointsListX = new ArrayList<Double>();
         List<Double> pointsListY = new ArrayList<Double>();
         List<Double> pointsListZ = new ArrayList<Double>();
+        List<Double> pointsListH = new ArrayList<Double>();
+        List<Double> pointsListW = new ArrayList<Double>();
         final int[] nearestCentroids;
 
         System.arraycopy(centroidsX, 0, _centroidsX, 0, _K);
         System.arraycopy(centroidsY, 0, _centroidsY, 0, _K);
         System.arraycopy(centroidsZ, 0, _centroidsZ, 0, _K);
+        System.arraycopy(centroidsH, 0, _centroidsH, 0, _K);
+        System.arraycopy(centroidsW, 0, _centroidsW, 0, _K);
 	while(context.nextKeyValue()) {
 	  String[] xyz = context.getCurrentValue().toString().split(" ");
           pointsListX.add(Double.valueOf(xyz[0]));
           pointsListY.add(Double.valueOf(xyz[1]));
           pointsListZ.add(Double.valueOf(xyz[2]));
+          pointsListH.add(Double.valueOf(xyz[3]));
+          pointsListW.add(Double.valueOf(xyz[4]));
 	}
 
         final int size = pointsListX.size();
         pointsX = new double[size];
         pointsY = new double[size];
         pointsZ = new double[size];
+        pointsH = new double[size];
+        pointsW = new double[size];
         nearestCentroids = new int[size];
         for(int index = 0;index < size;index++) {
           pointsX[index] = pointsListX.get(index);
           pointsY[index] = pointsListY.get(index);
           pointsZ[index] = pointsListZ.get(index);
+          pointsH[index] = pointsListH.get(index);
+          pointsW[index] = pointsListW.get(index);
         }
 
         if(isGPUMapper()) {
@@ -118,7 +138,9 @@ public class KMeans extends Configured implements Tool {
                 double diffX = pointsX[gid] - _centroidsX[i];
                 double diffY = pointsY[gid] - _centroidsY[i];
                 double diffZ = pointsZ[gid] - _centroidsZ[i];
-                double distance = diffX * diffX + diffY * diffY + diffZ * diffZ;
+                double diffH = pointsH[gid] - _centroidsH[i];
+                double diffW = pointsW[gid] - _centroidsW[i];
+                double distance = diffX * diffX + diffY * diffY + diffZ * diffZ +diffH * diffH+diffW * diffW;
                 if(distance < minDistance) {
                   minDistance = distance;
                   nearestCentroid = i;
@@ -145,7 +167,9 @@ public class KMeans extends Configured implements Tool {
                   double diffX = pointsX[gid] - _centroidsX[i];
                   double diffY = pointsY[gid] - _centroidsY[i];
                   double diffZ = pointsZ[gid] - _centroidsZ[i];
-                  double distance = diffX * diffX + diffY * diffY + diffZ * diffZ;
+                  double diffH = pointsH[gid] - _centroidsH[i];
+                  double diffW = pointsW[gid] - _centroidsW[i];
+                  double distance = diffX * diffX + diffY * diffY + diffZ * diffZ +diffH * diffH+diffW * diffW;
                   if(distance < minDistance) {
                     minDistance = distance;
                     nearestCentroid = i;
@@ -161,7 +185,9 @@ public class KMeans extends Configured implements Tool {
               double diffX = pointsX[index] - centroidsX[i];
               double diffY = pointsY[index] - centroidsY[i];
               double diffZ = pointsZ[index] - centroidsZ[i];
-              double distance = diffX * diffX + diffY * diffY + diffZ * diffZ;
+              double diffH = pointsH[index] - _centroidsH[i];
+              double diffW = pointsW[index] - _centroidsW[i];
+              double distance = diffX * diffX + diffY * diffY + diffZ * diffZ +diffH * diffH+diffW * diffW;
               if(distance < minDistance) {
                 minDistance = distance;
                 nearestCentroid = i;
@@ -173,7 +199,7 @@ public class KMeans extends Configured implements Tool {
 
         for(int index = 0;index < size;index++) {
           String point = pointsX[index] + " "
-              + pointsY[index] + " " + pointsZ[index];
+              + pointsY[index] + " " + pointsZ[index] + " " + pointsH[index] + " " + pointsW[index];
           context.write(new LongWritable(nearestCentroids[index]), 
               new Text(point));
         }
@@ -213,6 +239,8 @@ public class KMeans extends Configured implements Tool {
       double newCentroidX = 0.0;
       double newCentroidY = 0.0;
       double newCentroidZ = 0.0;
+      double newCentroidW = 0.0;
+      double newCentroidH = 0.0;
       int numElements = 0;
       List<Text> pointsList = new ArrayList<Text>();
 
@@ -222,14 +250,18 @@ public class KMeans extends Configured implements Tool {
         newCentroidX += Double.valueOf(xyz[0]);
         newCentroidY += Double.valueOf(xyz[1]);
         newCentroidZ += Double.valueOf(xyz[2]);
+        newCentroidH += Double.valueOf(xyz[3]);
+        newCentroidW += Double.valueOf(xyz[4]);
         numElements++;
       }
       newCentroidX /= numElements;
       newCentroidY /= numElements;
       newCentroidZ /= numElements;
+      newCentroidH /= numElements;
+      newCentroidW /= numElements;
       
       context.write(NullWritable.get(), 
-          new Text(newCentroidX + " " + newCentroidY + " " + newCentroidZ));
+          new Text(newCentroidX + " " + newCentroidY + " " + newCentroidZ + " " + newCentroidH + " " + newCentroidW));
       for(Text point : pointsList) {
         context.write(NullWritable.get(), point); 
       }
@@ -255,7 +287,7 @@ public class KMeans extends Configured implements Tool {
     job.setMapperClass(KmMapper.class);
 
     job.setReducerClass(KmReducer.class);
-    job.setNumReduceTasks(16);
+    job.setNumReduceTasks(40);
 
     job.setSpeculativeExecution(false);
 
