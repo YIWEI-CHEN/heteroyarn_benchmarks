@@ -78,6 +78,9 @@ public class KMeans extends Configured implements Tool {
       setup(context);
       long aparapiConversionTime = 0L, aparapiExecutionTime = 0L,
           aparapiBufferWriteTime = 0L, aparapiKernelTime = 0L, aparapiBufferReadTime = 0L;
+      long startTime = 0;
+      long endTime = 0;
+      String type="";
 
       try {
         final int _K = K;
@@ -149,6 +152,8 @@ public class KMeans extends Configured implements Tool {
               nearestCentroids[gid] = nearestCentroid;
             }
           };
+          type="GPU";
+          startTime = System.currentTimeMillis();
           kernel.execute(size);
          // aparapiConversionTime += kernel.getConversionTime();
          // aparapiExecutionTime += kernel.getExecutionTime();
@@ -156,10 +161,13 @@ public class KMeans extends Configured implements Tool {
          // aparapiKernelTime += kernel.getKernelExecutionTime();
          // aparapiBufferReadTime += kernel.getBufferDeviceToHostTime();
           kernel.dispose();
+          endTime = System.currentTimeMillis();
          System.out.println("kernel mode\t"+kernel.getExecutionMode());
          // updateAparapiCounters(context, aparapiConversionTime, aparapiExecutionTime,
          //     aparapiBufferWriteTime, aparapiKernelTime, aparapiBufferReadTime);
         } else if(isHSAMapper()){
+            type="HSA";
+            startTime = System.currentTimeMillis();
             Aparapi.range(size).parallel().forEach(gid ->{
                 double minDistance = maxDistance;
                 int nearestCentroid = -1;
@@ -177,7 +185,10 @@ public class KMeans extends Configured implements Tool {
                 }
                 nearestCentroids[gid] = nearestCentroid;
             });
+          endTime = System.currentTimeMillis();
         }else{
+          type="CPU";
+          startTime = System.currentTimeMillis();
           for(int index = 0;index < size;index++) {
             double minDistance = maxDistance;
             int nearestCentroid = -1;
@@ -195,6 +206,7 @@ public class KMeans extends Configured implements Tool {
             }
             nearestCentroids[index] = nearestCentroid;
           }
+          endTime = System.currentTimeMillis();
         }
 
         for(int index = 0;index < size;index++) {
@@ -205,6 +217,7 @@ public class KMeans extends Configured implements Tool {
         }
         
       } finally {
+          System.out.println("MAP in Mapper/MAP/" + startTime + "/" + endTime + "/" + (endTime-startTime) + "/" + type );
 	cleanup(context);
       }
     }
