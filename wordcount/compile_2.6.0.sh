@@ -6,4 +6,4 @@ MY_CLASSPATH=$MY_HADOOP_HOME/share/hadoop/common/hadoop-common-2.6.0.jar:$MY_HAD
 
 mkdir -p $CUR_DIR/classes
 javac -Xlint -classpath $MY_CLASSPATH -d $CUR_DIR/classes $CUR_DIR/WordCount.java
-jar -cvf wordcount.jar -C $CUR_DIR/classes . 
+jar -cvf WordCount.jar -C $CUR_DIR/classes . 
