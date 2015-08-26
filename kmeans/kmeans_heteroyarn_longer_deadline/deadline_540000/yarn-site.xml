@@ -1,0 +1,84 @@
+<?xml version="1.0"?>
+<configuration>
+  <property>
+     <name>yarn.nodemanager.aux-services</name>
+     <value>mapreduce_shuffle</value>
+  </property>
+  <property>
+      <name>yarn.resourcemanager.hostname</name>
+      <value>pasH0</value>
+      <!--value>pasX</value-->
+  </property>
+  <property>
+      <name>yarn.nodemanager.hostname</name>
+      <value>pasH0</value>
+      <description>The hostname of the nodemanager.</description>
+  </property>
+  <!-- the limitation of kinds of resource can be allocated for contaienrs -->
+  <property>
+    <name>yarn.nodemanager.resource.memory-mb</name>
+    <value>16384</value>
+    <description>Amount of physical memory, in MB, that can be allocated for containers.</description>
+  </property>
+  <property>
+    <name>yarn.nodemanager.resource.cpu-vcores</name>
+    <value>4</value>
+    <description>Number of vcores that can be allocated for containers.</description>
+  </property>
+  <property>
+    <name>yarn.nodemanager.resource.gpu-vcards</name>
+    <value>0</value>
+    <description>Number of GPU cards that can be allocated for containers.</description>
+  </property>
+  <property>
+    <name>yarn.nodemanager.resource.hsa-vsets</name>
+    <value>1</value>
+    <description>Number of HSA sets that can be allocated for containers.</description>
+  </property>
+  <!-- end -->
+  <!-- resource limitation per container  -->
+  <property>
+    <name>yarn.scheduler.minimum-allocation-mb</name>
+    <value>1024</value>
+    <description>Minimum memory allocation for every container</description>
+  </property>
+  <property>
+    <name>yarn.nodemanager.vmem-pmem-ratio</name>
+    <value>100</value>
+  </property>
+  <!-- container cpu usage limitation -->
+  <property>
+    <name>yarn.scheduler.minimum-allocation-vcores</name>
+    <value>1</value>
+  </property>
+  <property>
+    <name>yarn.scheduler.maximum-allocation-vcores</name>
+    <value>1</value> 
+  </property>
+  <!-- end -->
+  <property>
+      <name>yarn.nodemanager.disk-health-checker.max-disk-utilization-per-disk-percentage</name>
+      <value>100.0</value>
+      <description>The maximum percentage of disk space utilization allowed after which a disk is marked as bad.</description>
+  </property>
+  <!--property>
+    <name>yarn.resourcemanager.resource-tracker.address</name>
+    <value>pasX:8025</value>
+  </property>
+  <property>
+    <name>yarn.resourcemanager.scheduler.address</name>
+    <value>pasX:8030</value>
+  </property>
+  <property>
+    <name>yarn.resourcemanager.address</name>
+    <value>pasX:8040</value>
+  </property>
+  <property>
+      <name>yarn.nodemanager.address</name>
+      <value>pasX:8050</value>
+  </property>
+  <property>
+      <name>yarn.nodemanager.localizer.address</name>
+      <value>pasX:8060</value>
+  </property-->
+</configuration>

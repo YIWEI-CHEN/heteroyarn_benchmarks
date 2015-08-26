@@ -1,0 +1,87 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+
+<configuration>
+    <property>
+        <name>mapreduce.jobhistory.address</name>
+        <value>pasH0:10020</value>
+    </property>
+    <property> 
+        <name>mapreduce.jobhistory.webapp.address</name>
+        <value>pasH0:19888</value> 
+    </property>
+    <property>
+         <name>mapreduce.framework.name</name>
+         <value>yarn</value>
+    </property>
+
+    <!-- resource requirement per map or reduce task -->
+    <property>
+        <name>mapreduce.map.memory.mb</name>
+        <value>2048</value>
+    </property>
+    <property>
+        <name>mapreduce.reduce.memory.mb</name>
+        <value>2048</value>
+    </property>
+    <property>
+        <name>mapreduce.map.cpu.vcores</name>
+        <value>1</value>
+        <description>The number of virtual cores required for each map task. </description>
+    </property>
+    <property>
+        <name>mapreduce.reduce.cpu.vcores</name>
+        <value>1</value>
+        <description>The number of virtual cores required for each reduce task. </description>
+    </property>
+    <property>
+        <name>mapreduce.map.gpu.vcards</name>
+        <value>0</value>
+        <description>The number of GPU cards required for each map task. </description>
+    </property>
+    <property>
+        <name>mapreduce.map.hsa.vsets</name>
+        <value>0</value>
+        <description>The number of HSA sets required for each map task. </description>
+    </property>
+    <!-- end resource requirement  -->
+
+    <property>
+        <name>mapreduce.map.java.opts</name>
+        <value>-Xmx1536m -Dcom.amd.aparapi.enableExecutionModeReporting=true -Dcom.amd.aparapi.enableProfiling=true -XX:-UseCompressedOops -agentpath:/usr/local/hadoop/lib/native/libaparapi_agent_x86_64.so -Dcom.amd.aparapi.useAgent=true -Dcom.amd.aparapi.enableVerboseJNI=false</value>
+    </property>
+    <property>
+        <name>mapreduce.reduce.java.opts</name>
+        <value>-Xmx1536m -Dcom.amd.aparapi.enableExecutionModeReporting=true -Dcom.amd.aparapi.enableProfiling=true</value>
+    </property>
+    <property>
+        <name>mapreduce.map.env</name>
+        <value>"LD_LIBRARY_PATH=/opt/hsa/lib:/usr/local/hadoop/lib/native"</value>
+    </property>
+    <property>
+        <name>mapreduce.task.io.sort.mb</name>
+        <value>200</value>
+        <description>the size to use while sorting map output</description>
+    </property>
+    <property>
+        <name>mapreduce.reduce.input.buffer.percent</name>
+        <value>1.0f</value>
+        <description>the proportion of total heap size to be used for retaining map outputs in memory during reduce</description>
+    </property>
+    <property>
+        <name>mapreduce.reduce.merge.inmem.threshold</name>
+        <value>0</value>
+        <description>the number of map outputs for starting the process of merging the outputs and spilling to disk</description>
+    </property>
+    <property>
+        <name>mapreduce.job.reduce.slowstart.completedmaps</name>
+        <value>1.0</value>
+        <description>Fraction of the number of maps in the job which should be complete before reduces are scheduled for the job. Value is 1.0 meaning reduces start after all maps finish. </description>
+    </property>
+    <property>
+        <name>mapreduce.job.deadline</name>
+        <value>540000</value>
+        <description>ms</description>
+    </property>
+
+</configuration>

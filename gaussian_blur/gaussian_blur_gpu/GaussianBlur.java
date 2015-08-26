@@ -25,7 +25,8 @@ import org.apache.hadoop.mapreduce.lib.output.NullOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
-import com.amd.aparapi.Kernel;
+import csie.pas.aparapi.Kernel;
+import com.amd.aparapi.Aparapi;
 
 public class GaussianBlur extends Configured implements Tool {
   
@@ -39,19 +40,22 @@ public class GaussianBlur extends Configured implements Tool {
       int iteration = 0;
       long aparapiConversionTime = 0L, aparapiExecutionTime = 0L,
           aparapiBufferWriteTime = 0L, aparapiKernelTime = 0L, aparapiBufferReadTime = 0L;
+      long startTime = 0;
+      long endTime = 0;
+      String type="";
 
       try {
         final double sigma = Double.valueOf(context.getConfiguration().get("gaussian_blur.sigma"));
 
-        if(isGpuMapper()) {
-          try {
-            if(getSleepTime() > 0) {
-              Thread.sleep(4000);
-              aparapiConversionTime += 4000L;
-            }
-          } catch(InterruptedException e) {
-            e.printStackTrace();
-          }
+        if(isGPUMapper()) {
+          //try {
+          //  if(getSleepTime() > 0) {
+          //    Thread.sleep(4000);
+          //    aparapiConversionTime += 4000L;
+          //  }
+          //} catch(InterruptedException e) {
+          //  e.printStackTrace();
+          //}
           while(context.nextKeyValue()) {
             String _image = context.getCurrentValue().toString();
             String[] image = context.getCurrentValue().toString().split(" ");
@@ -98,27 +102,82 @@ public class GaussianBlur extends Configured implements Tool {
                 rgbDest[x * width + y] = ((int)sumBlue) | ((int)sumGreen << 8) | ((int)sumRed << 16);
               }
             };
-            kernel.execute(height * width);
-            aparapiConversionTime += kernel.getConversionTime();
-            aparapiExecutionTime += kernel.getExecutionTime();
-            aparapiBufferWriteTime += kernel.getBufferHostToDeviceTime();
-            aparapiKernelTime += kernel.getKernelExecutionTime();
-            aparapiBufferReadTime += kernel.getBufferDeviceToHostTime();
-            kernel.dispose();
 
-            BufferedImage imageDest = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-            for(int x = 0;x < height;x++) {
-              for(int y = 0;y < width;y++) {
-                imageDest.setRGB(y, x, rgbDest[x * width + y]);
-              }
-            }
-            ImageIO.write(imageDest, "jpg", new File("/home/heterohadoop/gaussian_blur_output/panda_gaussian_" 
-                + iteration + "_" + getTaskID(context) + ".jpg"));
+            type="GPU";
+            startTime = System.currentTimeMillis();
+            kernel.execute(height * width);
+            //aparapiConversionTime += kernel.getConversionTime();
+            //aparapiExecutionTime += kernel.getExecutionTime();
+            //aparapiBufferWriteTime += kernel.getBufferHostToDeviceTime();
+            //aparapiKernelTime += kernel.getKernelExecutionTime();
+            //aparapiBufferReadTime += kernel.getBufferDeviceToHostTime();
+            kernel.dispose();
+            endTime = System.currentTimeMillis();
+            System.out.println("kernel mode\t"+kernel.getExecutionMode());
+
+            //BufferedImage imageDest = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+            //for(int x = 0;x < height;x++) {
+            //  for(int y = 0;y < width;y++) {
+            //    imageDest.setRGB(y, x, rgbDest[x * width + y]);
+            //  }
+            //}
+            //ImageIO.write(imageDest, "jpg", new File("/home/heterohadoop/gaussian_blur_output/panda_gaussian_" 
+            //    + iteration + "_" + getTaskID(context) + ".jpg"));
 
             iteration++;
-          }
-          updateAparapiCounters(context, aparapiConversionTime, aparapiExecutionTime,
-              aparapiBufferWriteTime, aparapiKernelTime, aparapiBufferReadTime);
+            } 
+          //updateAparapiCounters(context, aparapiConversionTime, aparapiExecutionTime,
+          //    aparapiBufferWriteTime, aparapiKernelTime, aparapiBufferReadTime);
+        } else if(isHSAMapper()){
+          while(context.nextKeyValue()) {
+            String _image = context.getCurrentValue().toString();
+            String[] image = context.getCurrentValue().toString().split(" ");
+            final int height = Integer.valueOf(image[0]);
+            final int width = Integer.valueOf(image[1]);
+            final int[] red = new int[height * width];
+            final int[] green = new int[height * width];
+            final int[] blue = new int[height * width];
+            final int[] rgbDest = new int[height * width];
+
+            int index = 2;
+            for(int x = 0;x < height;x++) {
+              for(int y = 0;y < width;y++) {
+                red[x * width + y] = Integer.valueOf(image[index]);
+                green[x * width + y] = Integer.valueOf(image[index + 1]);
+                blue[x * width + y] = Integer.valueOf(image[index + 2]);
+                index += 3;
+              }
+            }
+
+            final double[] mask = createBlurMask(sigma);
+            final int maskSize = (int)Math.ceil(3.0 * sigma);
+            final int maskMatrixWidth = 2 * maskSize + 1;
+
+            type="HSA";
+            startTime = System.currentTimeMillis();
+            Aparapi.range(height * width).parallel().forEach(gid ->{
+                int x = gid / width;
+                int y = gid % width;
+                double sumRed = 0.0, sumGreen = 0.0, sumBlue = 0.0;
+                for(int a = -maskSize; a < maskSize + 1; a++) {
+                  for(int b = -maskSize; b < maskSize + 1; b++) {
+                    int readX = a + x, readY = b + y;
+                    boolean outOfBound = (readX < 0) || (readX >= height) 
+                        || (readY < 0) || (readY >= width);
+                    if(!outOfBound) {
+                      sumRed += mask[(a + maskSize) * maskMatrixWidth + (b +maskSize)] * red[readX * width + readY];
+                      sumGreen += mask[(a + maskSize) * maskMatrixWidth + (b + maskSize)] * green[readX * width + readY];
+                      sumBlue += mask[(a + maskSize) * maskMatrixWidth + (b + maskSize)] * blue[readX * width + readY];
+                    }
+                  }
+                }
+                rgbDest[x * width + y] = ((int)sumBlue) | ((int)sumGreen << 8) | ((int)sumRed << 16);
+                
+
+            });
+            endTime = System.currentTimeMillis();
+            iteration++;
+          } 
         } else {
           while(context.nextKeyValue()) {
             String _image = context.getCurrentValue().toString();
@@ -164,20 +223,19 @@ public class GaussianBlur extends Configured implements Tool {
             }
 
             BufferedImage imageDest = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-            for(int x = 0;x < height;x++) {
-              for(int y = 0;y < width;y++) {
-                imageDest.setRGB(y, x, rgbDest[x * width + y]);
-              }
-            }
-            ImageIO.write(imageDest, "jpg", new File("/home/heterohadoop/gaussian_blur_output/panda_gaussian_" 
-                + iteration + "_" + getTaskID(context) + ".jpg"));
+            //for(int x = 0;x < height;x++) {
+            //  for(int y = 0;y < width;y++) {
+            //    imageDest.setRGB(y, x, rgbDest[x * width + y]);
+            //  }
+            //}
+            //ImageIO.write(imageDest, "jpg", new File("/home/heterohadoop/gaussian_blur_output/panda_gaussian_" 
+            //    + iteration + "_" + getTaskID(context) + ".jpg"));
 
             iteration++;
           }
-          updateAparapiCounters(context, aparapiConversionTime, aparapiExecutionTime,
-              aparapiBufferWriteTime, aparapiKernelTime, aparapiBufferReadTime);
         }
       } finally {
+          System.out.println("MAP in Mapper/MAP/" + startTime + "/" + endTime + "/" + (endTime-startTime) + "/" + type );
         cleanup(context);
       }
     }
@@ -199,16 +257,16 @@ public class GaussianBlur extends Configured implements Tool {
 
       return _mask;
     }
-    public void updateAparapiCounters(Context context,
-				      long aparapiConversionTime, long aparapiExecutionTime,
-				      long aparapiBufferWriteTime, long aparapiKernelTime, long aparapiBufferReadTime)
-				      throws IOException, InterruptedException {
-      context.getCounter(TaskCounter.APARAPI_CONVERSION_MILLIS).setValue(aparapiConversionTime);
-      context.getCounter(TaskCounter.APARAPI_EXECUTION_MILLIS).setValue(aparapiExecutionTime);
-      context.getCounter(TaskCounter.APARAPI_BUFFER_WRITE_MILLIS).setValue(aparapiBufferWriteTime);
-      context.getCounter(TaskCounter.APARAPI_KERNEL_MILLIS).setValue(aparapiKernelTime);
-      context.getCounter(TaskCounter.APARAPI_BUFFER_READ_MILLIS).setValue(aparapiBufferReadTime);
-    }
+    //public void updateAparapiCounters(Context context,
+    //    			      long aparapiConversionTime, long aparapiExecutionTime,
+    //    			      long aparapiBufferWriteTime, long aparapiKernelTime, long aparapiBufferReadTime)
+    //    			      throws IOException, InterruptedException {
+    //  context.getCounter(TaskCounter.APARAPI_CONVERSION_MILLIS).setValue(aparapiConversionTime);
+    //  context.getCounter(TaskCounter.APARAPI_EXECUTION_MILLIS).setValue(aparapiExecutionTime);
+    //  context.getCounter(TaskCounter.APARAPI_BUFFER_WRITE_MILLIS).setValue(aparapiBufferWriteTime);
+    //  context.getCounter(TaskCounter.APARAPI_KERNEL_MILLIS).setValue(aparapiKernelTime);
+    //  context.getCounter(TaskCounter.APARAPI_BUFFER_READ_MILLIS).setValue(aparapiBufferReadTime);
+    //}
 
     int getTaskID(Context context)
 		throws IOException, InterruptedException {
@@ -220,9 +278,10 @@ public class GaussianBlur extends Configured implements Tool {
     }
   }
 
-  public static void executeGaussianBlur(Configuration conf
+  public static void executeGaussianBlur(Configuration conf, String INPUT_DIR,
+          String OUTPUT_DIR
       ) throws IOException, ClassNotFoundException, InterruptedException {
-    Job job = new Job(conf);
+    Job job = Job.getInstance(conf);
     //setup job conf
     job.setJobName(GaussianBlur.class.getSimpleName());
     job.setJarByClass(GaussianBlur.class);
@@ -242,7 +301,8 @@ public class GaussianBlur extends Configured implements Tool {
     job.setSpeculativeExecution(false);
 
     //setup input/output directories
-    final Path inDir = new Path("/images");
+    //final Path inDir = new Path("/images");
+    final Path inDir = new Path(INPUT_DIR);
     FileInputFormat.setInputPaths(job, inDir);
 
     final FileSystem fs = FileSystem.get(conf);
@@ -260,19 +320,23 @@ public class GaussianBlur extends Configured implements Tool {
   }
 
   public int run(String[] args) throws Exception {
-    if (args.length != 1) {
+    if (args.length != 3) {
       System.err.println("Usage: " + getClass().getName() + " <sigma>");
       ToolRunner.printGenericCommandUsage(System.err);
       return 2;
     }
     
     double sigma = Double.parseDouble(args[0]);
+    final String INPUT_DIR = args[1];
+    final String OUTPUT_DIR = args[2];
     Configuration conf = getConf();
     
     System.out.println("Value of sigma  = " + sigma);
     conf.setDouble("gaussian_blur.sigma", sigma);
+//    conf.setInt("mapreduce.map.memory.mb", 4096);
+//    conf.set("mapreduce.map.java.opts","-Xmx3072m -Dcom.amd.aparapi.enableExecutionModeReporting=true -Dcom.amd.aparapi.enableProfiling=true -XX:-UseCompressedOops -agentpath:/usr/local/hadoop/lib/native/libaparapi_agent_x86_64.so -Dcom.amd.aparapi.useAgent=true -Dcom.amd.aparapi.enableVerboseJNI=false");
 
-    executeGaussianBlur(getConf());
+    executeGaussianBlur(getConf(), INPUT_DIR, OUTPUT_DIR);
     System.out.println("Gaussian Blur is done for sigma = " + sigma);
 
     return 0;

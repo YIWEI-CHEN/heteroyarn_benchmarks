@@ -27,12 +27,9 @@ import com.amd.aparapi.Aparapi;
 
 public class KMeans extends Configured implements Tool {
 
-  //public static String INPUT_DIR     = "kmeans/input";
-  //public static String OUTPUT_DIR    = "kmeans/output";
-  //public static String CENTROIDS_DIR = "kmeans/centroids";
-  public static String INPUT_DIR     = "";
-  public static String OUTPUT_DIR    = "";
-  public static String CENTROIDS_DIR = "";
+  public static String INPUT_DIR     = "kmeans2/input";
+  public static String OUTPUT_DIR    = "kmeans2/output";
+  public static String CENTROIDS_DIR = "kmeans2/centroids";
   
   public static class KmMapper extends 
       Mapper<LongWritable, Text, LongWritable, Text> {
@@ -48,9 +45,6 @@ public class KMeans extends Configured implements Tool {
     protected void setup(Context context
         ) throws IOException, InterruptedException {
       K = Integer.valueOf(context.getConfiguration().get("kmeans.k"));
-      INPUT_DIR     = context.getConfiguration().get("kmeans.input");
-      OUTPUT_DIR    = context.getConfiguration().get("kmeans.output");
-      CENTROIDS_DIR = context.getConfiguration().get("kmeans.centroids");
       try {
         Path centroidsFilePath = new Path(CENTROIDS_DIR, "part0");
         FileSystem fs = FileSystem.get(context.getConfiguration());
@@ -287,8 +281,7 @@ public class KMeans extends Configured implements Tool {
     }
   }
 
-  public static void kmeans(int K, Configuration conf, String INPUT_DIR, String OUTPUT_DIR,
-          String CENTROIDS_DIR, int totalReduces
+  public static void kmeans(int K, Configuration conf
       ) throws IOException, ClassNotFoundException, InterruptedException {
     //Job job = new Job(conf);
     Job job = Job.getInstance(conf);
@@ -307,7 +300,7 @@ public class KMeans extends Configured implements Tool {
     job.setMapperClass(KmMapper.class);
 
     job.setReducerClass(KmReducer.class);
-    job.setNumReduceTasks(totalReduces);
+    job.setNumReduceTasks(40);
 
     job.setSpeculativeExecution(false);
 
@@ -330,28 +323,19 @@ public class KMeans extends Configured implements Tool {
   }
 
   public int run(String[] args) throws Exception {
-    if (args.length != 5) {
+    if (args.length != 1) {
       System.err.println("Usage: " + getClass().getName() + " <K>");
       ToolRunner.printGenericCommandUsage(System.err);
       return 2;
     }
     
     final int K = Integer.parseInt(args[0]);
-    final String INPUT_DIR = args[1];
-    final String OUTPUT_DIR = args[2];
-    final String CENTROIDS_DIR = args[3];
-    final int totalReduces = Integer.parseInt(args[4]);
     Configuration conf = getConf();
     conf.setInt("kmeans.k", K);
-    conf.set("kmeans.input", INPUT_DIR);
-    conf.set("kmeans.output", OUTPUT_DIR);
-    conf.set("kmeans.centroids", CENTROIDS_DIR);
 
     System.out.println("Value of K = " + K);
-    System.out.println("INPUT_DIR=" + INPUT_DIR + " OUTPUT_DIR=" + OUTPUT_DIR
-            + " CENTROIDS_DIR=" + CENTROIDS_DIR);
         
-    kmeans(K, getConf(), INPUT_DIR, OUTPUT_DIR, CENTROIDS_DIR, totalReduces);
+    kmeans(K, getConf());
     return 0;
   }
 
