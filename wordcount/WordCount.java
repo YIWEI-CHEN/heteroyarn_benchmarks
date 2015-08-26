@@ -67,29 +67,30 @@ public class WordCount {
   public static void main(String[] args) throws Exception {
     Configuration conf = new Configuration();
     String[] otherArgs = new GenericOptionsParser(conf, args).getRemainingArgs();
-    conf.setBoolean("mapreduce.task.profile", true);
-    conf.set("mapreduce.task.profile.maps","0");
-    conf.set("mapreduce.task.profile.reduces","0");
+//    conf.setBoolean("mapreduce.task.profile", true);
+//    conf.set("mapreduce.task.profile.maps","0");
+//    conf.set("mapreduce.task.profile.reduces","0");
     // profile using HPROF
 //    conf.set("mapreduce.task.profile.params","-agentlib:hprof=cpu=samples,depth=20,force=n,thread=y,verbose=n,file=%s");
 //    conf.set("mapreduce.task.profile.params","-agentlib:hprof=heap=sites,depth=6,force=n,thread=y,verbose=n,file=%s");
     // profile using BTrace
-    conf.set("mapred.task.profile.params", "-javaagent:"
-            + "/home/yiwei/btrace/btrace-agent.jar="
-            + "dumpClasses=false,debug=false,"
-            + "unsafe=true,probeDescPath=.,noServer=true,"
-            + "script=/home/yiwei/btrace/HadoopBTrace2.class,"
-            + "scriptOutputFile=%s");
-    conf.setInt("mapreduce.job.jvm.numtasks", 1);
-    conf.setInt("mapreduce.map.combine.minspills", 9999);
-    conf.setInt("mapreduce.reduce.shuffle.parallelcopies", 1);
-    conf.setFloat("mapreduce.reduce.input.buffer.percent", 0f);
-    conf.setBoolean("mapreduce.map.speculative", false);
-    conf.setBoolean("mapreduce.reduce.speculative", false);
-    if (otherArgs.length < 2) {
-      System.err.println("Usage: wordcount <in> [<in>...] <out>");
+//    conf.set("mapred.task.profile.params", "-javaagent:"
+//            + "/home/yiwei/btrace/btrace-agent.jar="
+//            + "dumpClasses=false,debug=false,"
+//            + "unsafe=true,probeDescPath=.,noServer=true,"
+//            + "script=/home/yiwei/btrace/HadoopBTrace2.class,"
+//            + "scriptOutputFile=%s");
+//    conf.setInt("mapreduce.job.jvm.numtasks", 1);
+//    conf.setInt("mapreduce.map.combine.minspills", 9999);
+//    conf.setInt("mapreduce.reduce.shuffle.parallelcopies", 1);
+//    conf.setFloat("mapreduce.reduce.input.buffer.percent", 0f);
+//    conf.setBoolean("mapreduce.map.speculative", false);
+//    conf.setBoolean("mapreduce.reduce.speculative", false);
+    if (otherArgs.length < 3) {
+      System.err.println("Usage: wordcount <in> [<in>...] <out> <numOfReduce>");
       System.exit(2);
     }
+    final int totalReduces = Integer.parseInt(otherArgs[otherArgs.length-1]);
     Job job = Job.getInstance(conf);
     job.setJobName(WordCount.class.getSimpleName());
     job.setJarByClass(WordCount.class);
@@ -98,11 +99,13 @@ public class WordCount {
     job.setReducerClass(IntSumReducer.class);
     job.setOutputKeyClass(Text.class);
     job.setOutputValueClass(IntWritable.class);
-    for (int i = 0; i < otherArgs.length - 1; ++i) {
+    job.setNumReduceTasks(totalReduces);
+    for (int i = 0; i < otherArgs.length - 2; ++i) {
       FileInputFormat.addInputPath(job, new Path(otherArgs[i]));
     }
     FileOutputFormat.setOutputPath(job,
-      new Path(otherArgs[otherArgs.length - 1]));
+      new Path(otherArgs[otherArgs.length - 2]));
+
     System.exit(job.waitForCompletion(true) ? 0 : 1);
   }
 }
